@@ -1,11 +1,14 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 using Wolverine;
 using Wolverine.FluentValidation;
 using Zn.Application.Extensions;
 using Zn.ClientWebApi.Extensions;
 using Zn.ClientWebApi.Middleware;
+using Zn.ClientWebApi.Seeding;
 using Zn.Domain.Entity;
 using Zn.Infrastructure.Extensions;
+using Zn.Infrastructure.Storage;
 using Zn.Persistence.Context;
 using Zn.Persistence.Extensions;
 
@@ -40,6 +43,27 @@ builder.Services.AddPersistenceServices(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddApplicationServices(builder.Configuration);
 
+// --- İlk admin kullanıcı seed ayarları (rol seed'i sabit; admin user opsiyoneldir) ---
+builder.Services.Configure<AdminUserOptions>(
+    builder.Configuration.GetSection(AdminUserOptions.SectionName));
+
+// --- Dosya depolama kök yolu: WebRootPath (wwwroot) altında "uploads" ---
+// Infrastructure ASP.NET hosting tiplerini bilmediğinden, fiziksel kök yolu burada,
+// host ortamına göre belirleyip FileStorageOptions'a post-configure ediyoruz.
+// WebRootPath yoksa (wwwroot klasörü mevcut değilse) ContentRoot altında üretilir.
+string webRootPath = builder.Environment.WebRootPath
+    ?? Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
+string uploadsRootPath = Path.Combine(webRootPath, "uploads");
+Directory.CreateDirectory(uploadsRootPath);
+
+builder.Services.PostConfigure<FileStorageOptions>(options =>
+{
+    if (string.IsNullOrWhiteSpace(options.RootPath))
+    {
+        options.RootPath = uploadsRootPath;
+    }
+});
+
 // --- API servisleri ---
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
@@ -55,6 +79,11 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 var app = builder.Build();
 
+// --- Açılışta idempotent seed: roller + (yapılandırılmışsa) ilk admin kullanıcı ---
+// Migration testlerde WebApplicationFactory tarafından ayrıca uygulanır; burada yalnızca
+// rol/kullanıcı seed'i yapılır. Idempotent olduğundan her başlatmada güvenle çalışır.
+await IdentityDataSeeder.SeedAsync(app.Services);
+
 // --- HTTP pipeline ---
 // Exception handler en başta olmalı ki alt katmanların hataları yakalanabilsin.
 app.UseExceptionHandler();
@@ -65,6 +94,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Yüklenen görselleri (wwwroot/uploads → /uploads) statik dosya olarak servis eder.
+// Kimlik doğrulamadan önce gelir: yüklenen görseller herkese açık okunabilir.
+app.UseStaticFiles();
 
 app.UseCors(CorsRegistration.DevelopmentPolicy);
 

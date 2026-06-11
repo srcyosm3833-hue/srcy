@@ -43,7 +43,8 @@ Her yeni özellik dikey dilim olarak gelir: command/query + handler + validator 
 5. **Auth = JWT access token (~15 dk) + refresh token (rotation'lı), baştan tam kurulum** — `RefreshToken` entity'si, `/api/auth/refresh` ve `/api/auth/logout` endpoint'leri Faz 1 kapsamında; revoke edilmiş token tekrar kullanılırsa kullanıcının tüm refresh token'ları iptal edilir.
 6. **Test:** backend xUnit + WebApplicationFactory (InMemory EF kullanma — TestContainers/LocalDB tercih edilir), frontend Vitest + React Testing Library.
 
+7. **Görsel yükleme:** Blog create/update görsel alanları URL kabul eder; dosya yükleme ayrı `POST /api/uploads` endpoint'iyle `IFileStorageService` soyutlaması üzerinden yapılır (development: `LocalFileStorageService` → `wwwroot/uploads`, jpg/jpeg/png/webp, max 5 MB). Production'da aynı arayüzle cloud storage implementasyonuna geçilir — çağıran kod değişmez.
+
 ## Açık Kararlar (uygulamadan önce kullanıcıya sor)
 
-- Görsel yükleme stratejisi (URL vs multipart + depolama) — Faz 2'den önce.
 - Frontend token saklama (localStorage vs httpOnly cookie) ve frontend mimarisi (router, state, UI kütüphanesi) — Faz 4'ten önce.

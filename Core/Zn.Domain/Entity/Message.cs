@@ -1,30 +1,118 @@
 using System;
 using Zn.Domain.Entity.Common;
+using Zn.Domain.Exceptions;
 
 namespace Zn.Domain.Entity
 {
     /// <summary>
     /// Ziyaretçiden gelen iletişim mesajını temsil eder. BaseEntity'den
     /// Guid tipinde Id, CreatedAt ve UpdatedAt alanlarını miras alır.
+    /// <para>
+    /// Invariant'lar (boş olmayan, azami uzunluğu aşmayan ad/e-posta/konu/gövde) factory metodu
+    /// <see cref="Create"/> içinde korunur; geçersiz durumda <see cref="MessageDomainException"/>
+    /// fırlatılır. Okunma durumu <see cref="MarkAsRead"/> mutator'ı ile açıkça (true/false) set
+    /// edilir. Bu sayede geçersiz bir Message nesnesi hiçbir zaman var olamaz.
+    /// </para>
+    /// <para>
+    /// Not: Property isimleri, tipleri ve kolon eşlemeleri bilinçli olarak değiştirilmemiştir;
+    /// yalnızca davranış katmanı (factory + private set) eklenmiştir. Bu nedenle mevcut
+    /// migration/şema ile birebir uyumludur — yeni migration gerekmez.
+    /// </para>
     /// </summary>
     public class Message : BaseEntity
     {
-        /// <summary>Gönderenin adı. Non-nullable.</summary>
-        public string Name { get; set; } = null!;
+        /// <summary>
+        /// Gönderen adının azami uzunluğu. MessageConfiguration'daki HasMaxLength(100) ile
+        /// birebir senkrondur; veritabanı kısıtı ile domain invariant'ı paralel tutulur.
+        /// </summary>
+        public const int NameMaxLength = 100;
 
-        /// <summary>Gönderenin e-posta adresi. Non-nullable.</summary>
-        public string Email { get; set; } = null!;
+        /// <summary>Gönderen e-posta adresinin azami uzunluğu. MessageConfiguration'daki HasMaxLength(150) ile senkron.</summary>
+        public const int EmailMaxLength = 150;
 
-        /// <summary>Mesaj konusu. Non-nullable.</summary>
-        public string Subject { get; set; } = null!;
-
-        /// <summary>Mesaj içeriği. Non-nullable.</summary>
-        public string MessageBody { get; set; } = null!;
+        /// <summary>Mesaj konusunun azami uzunluğu. MessageConfiguration'daki HasMaxLength(200) ile senkron.</summary>
+        public const int SubjectMaxLength = 200;
 
         /// <summary>
-        /// Mesajın okunup okunmadığı. Value-type (bool) olduğu için doğası gereği
-        /// non-nullable'dır; yeni mesaj varsayılan olarak okunmamış (false) başlar.
+        /// Mesaj gövdesinin azami uzunluğu. Kolon nvarchar(max) olduğundan veritabanı sınırı bu
+        /// değerden geniştir; sabit, bot/spam yükünü kısmak için domain + validator seviyesinde
+        /// uygulanan mantıksal üst sınırdır (kolon tipini DAR'altmaz, şema değişmez).
         /// </summary>
-        public bool IsRead { get; set; }
+        public const int MessageBodyMaxLength = 2000;
+
+        /// <summary>
+        /// EF Core materyalizasyonu için parametresiz constructor.
+        /// Uygulama kodu yerine <see cref="Create"/> factory'sini kullanmalıdır.
+        /// </summary>
+        private Message()
+        {
+        }
+
+        /// <summary>Gönderenin adı. Dışarıdan yalnızca okunabilir; <see cref="Create"/> ile belirlenir.</summary>
+        public string Name { get; private set; } = null!;
+
+        /// <summary>Gönderenin e-posta adresi. Dışarıdan yalnızca okunabilir; <see cref="Create"/> ile belirlenir.</summary>
+        public string Email { get; private set; } = null!;
+
+        /// <summary>Mesaj konusu. Dışarıdan yalnızca okunabilir; <see cref="Create"/> ile belirlenir.</summary>
+        public string Subject { get; private set; } = null!;
+
+        /// <summary>Mesaj içeriği. Dışarıdan yalnızca okunabilir; <see cref="Create"/> ile belirlenir.</summary>
+        public string MessageBody { get; private set; } = null!;
+
+        /// <summary>
+        /// Mesajın okunup okunmadığı. Yeni mesaj okunmamış (false) başlar; değişiklik yalnızca
+        /// <see cref="MarkAsRead"/> mutator'ı üzerinden yapılır.
+        /// </summary>
+        public bool IsRead { get; private set; }
+
+        /// <summary>
+        /// Ziyaretçi iletişim formundan geçerli bir Message oluşturur. Tüm metin alanları
+        /// boş/whitespace olamaz ve ilgili azami uzunluğu aşamaz; aksi halde
+        /// <see cref="MessageDomainException"/> fırlatılır. Mesaj okunmamış (IsRead=false) başlar.
+        /// </summary>
+        public static Message Create(string name, string email, string subject, string messageBody)
+        {
+            return new Message
+            {
+                Id = Guid.NewGuid(),
+                Name = Normalize(name, NameMaxLength, nameof(Name)),
+                Email = Normalize(email, EmailMaxLength, nameof(Email)),
+                Subject = Normalize(subject, SubjectMaxLength, nameof(Subject)),
+                MessageBody = Normalize(messageBody, MessageBodyMaxLength, nameof(MessageBody)),
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            };
+        }
+
+        /// <summary>
+        /// Mesajın okunma durumunu açıkça (true/false) set eder ve
+        /// <see cref="BaseEntity{TId}.UpdatedAt"/>'i günceller. Yönetici hem "okundu" hem
+        /// "okunmadı" olarak işaretleyebildiği için explicit değer alır.
+        /// </summary>
+        public void MarkAsRead(bool isRead)
+        {
+            IsRead = isRead;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        /// <summary>Metin alanı invariant'ı: boş olmama + trim + azami uzunluk.</summary>
+        private static string Normalize(string value, int maxLength, string fieldName)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                throw new MessageDomainException($"{fieldName} cannot be empty.");
+            }
+
+            string trimmed = value.Trim();
+
+            if (trimmed.Length > maxLength)
+            {
+                throw new MessageDomainException(
+                    $"{fieldName} cannot exceed {maxLength} characters.");
+            }
+
+            return trimmed;
+        }
     }
 }

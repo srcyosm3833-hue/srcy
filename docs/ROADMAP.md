@@ -17,7 +17,7 @@
 
 | # | Konu | Son karar tarihi | Not |
 |---|---|---|---|
-| A1 | Görsel yükleme stratejisi (URL kabul vs multipart + local/cloud depolama) | Faz 2 başlamadan | Production için cloud storage (Azure Blob/S3) önerilir. |
+| ~~A1~~ | ~~Görsel yükleme stratejisi~~ — **KAPANDI:** Blog alanları URL kabul eder + ayrı `POST /api/uploads` endpoint'i `IFileStorageService` ile (dev: local `wwwroot/uploads`; production'da cloud implementasyonuna geçilecek). | ✅ | Faz 2'de uygulandı. |
 | A2 | Frontend token saklama (localStorage vs httpOnly cookie + CSRF) | Faz 4 başlamadan | httpOnly cookie önerilir; refresh token zaten K4 ile var, cookie'ye taşımak API'de küçük değişiklik gerektirir. |
 | A3 | Frontend mimarisi (React Router vs Next.js, state yönetimi, UI kütüphanesi) | Faz 4 başlamadan | SEO ihtiyacı belirleyici. |
 | A4 | Test DB izolasyonu (TestContainers vs LocalDB) | Faz 5 / ilk integration test | InMemory EF kullanılmayacak — Restrict delete ve unique index davranışlarını simüle etmez. |

@@ -1,5 +1,7 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Zn.Application.Common.Results;
+using Zn.Domain.Authorization;
 
 namespace Zn.ClientWebApi.Controllers
 {
@@ -49,6 +51,17 @@ namespace Zn.ClientWebApi.Controllers
 
             return Problem(result.Error);
         }
+
+        /// <summary>
+        /// Geçerli access token'daki kullanıcı kimliğini (sub / NameIdentifier) döner.
+        /// [Authorize] ile korunan action'larda token doğrulanmış olduğundan dolu beklenir;
+        /// bulunamazsa null döner (çağıran defansif kontrol edebilir).
+        /// </summary>
+        protected string? GetUserId() =>
+            User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+
+        /// <summary>Geçerli kullanıcının Admin rolünde olup olmadığını döner.</summary>
+        protected bool IsAdmin() => User.IsInRole(RoleNames.Admin);
 
         /// <summary>Bir <see cref="Error"/>'ü uygun durum kodlu ProblemDetails'e çevirir.</summary>
         private IActionResult Problem(Error error)

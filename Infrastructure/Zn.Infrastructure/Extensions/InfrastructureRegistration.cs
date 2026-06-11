@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Zn.Application.Interfaces.Authentication;
+using Zn.Application.Interfaces.Storage;
 using Zn.Infrastructure.Authentication;
+using Zn.Infrastructure.Storage;
 
 namespace Zn.Infrastructure.Extensions
 {
@@ -28,6 +30,15 @@ namespace Zn.Infrastructure.Extensions
 
             // Refresh token hash'leme servisi: stateless, deterministik SHA-256.
             services.AddSingleton<ITokenHasher, Sha256TokenHasher>();
+
+            // Dosya depolama ayarları: "FileStorage" bölümünden bind edilir. RootPath fiziksel
+            // yolu Program.cs'te WebRootPath'e göre doldurulur (Infrastructure ASP.NET hosting
+            // tiplerini bilmez). Geliştirme için yerel disk; production'da bulut storage ile değişir.
+            services.Configure<FileStorageOptions>(
+                configuration.GetSection(FileStorageOptions.SectionName));
+
+            // Yerel dosya depolama implementasyonu. Stateless olduğu için Singleton uygundur.
+            services.AddSingleton<IFileStorageService, LocalFileStorageService>();
 
             return services;
         }

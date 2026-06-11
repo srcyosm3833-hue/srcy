@@ -8,5 +8,12 @@
   "JwtSettings": {
     "//SecretKey": "Bu dosyayı appsettings.Development.json olarak kopyalayıp kendi development secret'ınızı yazın (HMAC-SHA256 için en az 32 karakter). Gerçek/production secret ASLA commit'lenmez; user secrets veya environment'tan gelir.",
     "SecretKey": "BURAYA-EN-AZ-32-KARAKTERLIK-DEVELOPMENT-SECRET-YAZIN"
+  },
+  "AdminUser": {
+    "//": "Açılışta seed edilecek ilk admin kullanıcısı. Email/Password boş bırakılırsa admin seed atlanır (roller yine seed edilir). Şifre Identity politikasına uymalıdır (min 8, büyük+küçük harf, rakam).",
+    "Email": "admin@znblog.local",
+    "Password": "BURAYA-DEVELOPMENT-ADMIN-SIFRESI-YAZIN",
+    "FirstName": "System",
+    "LastName": "Administrator"
   }
 }
