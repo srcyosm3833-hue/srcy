@@ -1,0 +1,10 @@
+@import 'tailwindcss';
+
+/* Tailwind v4: yapilandirma CSS-first'tur. Tema degiskenleri ileride buraya
+   @theme blogu ile eklenebilir. Su an iskelet asamasinda varsayilanlar yeterli. */
+
+html,
+body,
+#root {
+  min-height: 100vh;
+}

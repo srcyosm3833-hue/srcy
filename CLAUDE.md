@@ -44,7 +44,9 @@ Her yeni özellik dikey dilim olarak gelir: command/query + handler + validator 
 6. **Test:** backend xUnit + WebApplicationFactory (InMemory EF kullanma — TestContainers/LocalDB tercih edilir), frontend Vitest + React Testing Library.
 
 7. **Görsel yükleme:** Blog create/update görsel alanları URL kabul eder; dosya yükleme ayrı `POST /api/uploads` endpoint'iyle `IFileStorageService` soyutlaması üzerinden yapılır (development: `LocalFileStorageService` → `wwwroot/uploads`, jpg/jpeg/png/webp, max 5 MB). Production'da aynı arayüzle cloud storage implementasyonuna geçilir — çağıran kod değişmez.
+8. **Frontend (`client/`):** Vite + React + TypeScript. Routing = React Router (data router / `createBrowserRouter`), server state = TanStack Query, stil = Tailwind CSS (v4, CSS-first), HTTP = axios. Dev server portu **5173** (CORS bu porta izin verir); API base URL `VITE_API_BASE_URL` env'inden (`http://localhost:5241`).
+9. **Token saklama = localStorage** (A2 kapandı). accessToken + refreshToken localStorage'da; axios interceptor 401'de tek-uçuşlu (single-flight) refresh yapar, başarısızsa `/login`'e yönlendirir. XSS riski bilinerek seçildi.
 
 ## Açık Kararlar (uygulamadan önce kullanıcıya sor)
 
-- Frontend token saklama (localStorage vs httpOnly cookie) ve frontend mimarisi (router, state, UI kütüphanesi) — Faz 4'ten önce.
+- **UI tema/kütüphane (A3):** Sıfırdan Tailwind ile mi tasarlanacak, yoksa hazır bir admin/blog teması mı entegre edilecek? — Gerçek sayfalara başlamadan önce.

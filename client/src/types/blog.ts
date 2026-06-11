@@ -1,0 +1,63 @@
+/**
+ * Blog sozlesmeleri. Kaynaklar:
+ *  - Features/Blogs/Common/BlogListItemResponse.cs (liste ogesi)
+ *  - Features/Blogs/Common/BlogDetailResponse.cs (detay)
+ *  - Controllers/BlogsController.cs (Create/Update request record'lari)
+ */
+
+/** Sayfali blog listesindeki tek oge (hafif: agir alanlar tasinmaz). */
+export interface BlogListItem {
+  id: string
+  title: string
+  /** Kapak gorseli URL'i. */
+  coverImage: string
+  categoryId: string
+  categoryName: string
+  /** Yazar tam adi (FirstName + LastName). */
+  authorName: string
+  /** ISO 8601 UTC olusturulma ani. */
+  createdAt: string
+}
+
+/** Tek blogun tam detayi (agir alanlar dahil). */
+export interface BlogDetail {
+  id: string
+  title: string
+  coverImage: string
+  /** Icerik gorseli URL'i. */
+  blogImage: string
+  /** Blog icerigi/aciklamasi. */
+  description: string
+  categoryId: string
+  categoryName: string
+  authorId: string
+  authorName: string
+  createdAt: string
+  /** Hic guncellenmediyse null. */
+  updatedAt: string | null
+}
+
+/** POST /api/blogs govdesi (yazar token'dan alinir, govdede UserId yoktur). */
+export interface CreateBlogRequest {
+  title: string
+  description: string
+  coverImage: string
+  blogImage: string
+  categoryId: string
+}
+
+/** PUT /api/blogs/{id} govdesi. */
+export interface UpdateBlogRequest {
+  title: string
+  description: string
+  coverImage: string
+  blogImage: string
+  categoryId: string
+}
+
+/** GET /api/blogs sorgu parametreleri. */
+export interface BlogListQuery {
+  page?: number
+  pageSize?: number
+  categoryId?: string
+}
