@@ -1,0 +1,41 @@
+# ===== .NET =====
+bin/
+obj/
+out/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.suo
+.vs/
+.vscode/
+*.swp
+TestResults/
+artifacts/
+*.binlog
+
+# ===== Node / Frontend =====
+node_modules/
+dist/
+.vite/
+coverage/
+*.local
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===== Gizli bilgiler =====
+# appsettings.Development.json development JwtSettings:SecretKey içeriyor —
+# gerçek secret'lar user secrets'ta tutulur, bu dosya commit'lenmez.
+# Yeni klonlarda: dotnet user-secrets ile JwtSettings:SecretKey tanımlayın
+# veya dosyayı appsettings.Development.json.example'dan kopyalayın.
+appsettings.Development.json
+*.pfx
+*.key
+secrets.json
+
+# ===== Claude Code yerel durumu =====
+.claude/agent-memory/
+
+# ===== İşletim sistemi =====
+Thumbs.db
+.DS_Store

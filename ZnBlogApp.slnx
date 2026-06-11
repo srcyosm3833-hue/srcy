@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/Core/">
+    <Project Path="Core/Zn.Application/Zn.Application.csproj" Id="e42d60a2-c753-4408-8d0d-72fcc7712337" />
+    <Project Path="Core/Zn.Domain/Zn.Domain.csproj" Id="287b5299-4bff-4ec8-ab48-57e400f92a13" />
+  </Folder>
+  <Folder Name="/Infrastructure/">
+    <Project Path="Infrastructure/Zn.Infrastructure/Zn.Infrastructure.csproj" Id="6395498b-7c4b-4424-841c-5291022a1992" />
+    <Project Path="Infrastructure/Zn.Persistence/Zn.Persistence.csproj" Id="9a48b312-0079-49c2-9b34-964b6cbd0211" />
+  </Folder>
+  <Folder Name="/Presentation/">
+    <Project Path="Presentation/Zn.ClientWebApi/Zn.ClientWebApi.csproj" Id="26505f33-bf21-4bac-a35c-8c8353e79070" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="tests/Zn.ClientWebApi.IntegrationTests/Zn.ClientWebApi.IntegrationTests.csproj" Id="a1b2c3d4-e5f6-7890-abcd-ef1234567890" />
+  </Folder>
+</Solution>

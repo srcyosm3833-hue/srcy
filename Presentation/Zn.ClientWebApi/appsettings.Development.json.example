@@ -1,0 +1,12 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "JwtSettings": {
+    "//SecretKey": "Bu dosyayı appsettings.Development.json olarak kopyalayıp kendi development secret'ınızı yazın (HMAC-SHA256 için en az 32 karakter). Gerçek/production secret ASLA commit'lenmez; user secrets veya environment'tan gelir.",
+    "SecretKey": "BURAYA-EN-AZ-32-KARAKTERLIK-DEVELOPMENT-SECRET-YAZIN"
+  }
+}
