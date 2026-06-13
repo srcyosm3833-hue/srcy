@@ -33,6 +33,12 @@ appsettings.Development.json
 *.key
 secrets.json
 
+# ===== Yüklenen dosyalar (runtime) =====
+# Kullanıcı tarafından yüklenen görseller commit'lenmez; klasör yapısı
+# .gitkeep ile korunur.
+Presentation/Zn.ClientWebApi/wwwroot/uploads/*
+!Presentation/Zn.ClientWebApi/wwwroot/uploads/.gitkeep
+
 # ===== Claude Code yerel durumu =====
 .claude/agent-memory/
 
