@@ -48,5 +48,12 @@ namespace Zn.Application.Interfaces.Persistence
         /// Filtresiz sorgular (silinmiş kullanıcıyı da görebilmek için).
         /// </summary>
         Task<bool> IsDeletedByEmailAsync(string email, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Verilen Id'ye sahip kullanıcının tam adını (FirstName + " " + LastName) döner; kullanıcı
+        /// yoksa null. Arama logunda "kim aradı" snapshot'ını üretmek için kullanılır. Filtresiz
+        /// (silinmiş kullanıcı da çözülebilir) ve yalnızca okuma (AsNoTracking + DB projeksiyon).
+        /// </summary>
+        Task<string?> GetFullNameByIdAsync(string userId, CancellationToken cancellationToken);
     }
 }

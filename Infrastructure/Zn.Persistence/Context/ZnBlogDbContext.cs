@@ -31,6 +31,7 @@ namespace Zn.Persistence.Context
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
         public DbSet<BlogLike> BlogLikes => Set<BlogLike>();
         public DbSet<CommentLike> CommentLikes => Set<CommentLike>();
+        public DbSet<SearchLog> SearchLogs => Set<SearchLog>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

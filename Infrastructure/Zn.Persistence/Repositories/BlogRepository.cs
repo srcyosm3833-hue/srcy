@@ -150,6 +150,32 @@ namespace Zn.Persistence.Repositories
         }
 
         /// <inheritdoc />
+        public async Task<BlogAuditDetail?> GetAuditDetailByIdAsync(Guid id, CancellationToken cancellationToken)
+        {
+            // Admin audit yolu: silinmiş bloglar da denetlenebilsin diye global query filter bypass
+            // edilir. CreatorIpHash projeksiyona dahil edilir (public yolda asla yapılmaz).
+            return await _context.Blogs
+                .AsNoTracking()
+                .IgnoreQueryFilters()
+                .Where(b => b.Id == id)
+                .Select(b => new BlogAuditDetail(
+                    b.Id,
+                    b.Title,
+                    b.CoverImage,
+                    b.BlogImage,
+                    b.Description,
+                    b.CategoryId,
+                    b.Category.CategoryName,
+                    b.UserId,
+                    b.User.FirstName + " " + b.User.LastName,
+                    b.CreatedAt,
+                    b.UpdatedAt,
+                    b.Likes.Count,
+                    b.CreatorIpHash))
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        /// <inheritdoc />
         public async Task<Blog?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             // Tracked: çağıran handler yetki kontrolü yapıp Update/Remove uygular ve SaveChanges'le kalıcılaştırır.

@@ -32,6 +32,13 @@ namespace Zn.Persistence.Configurations
             builder.Property(m => m.MessageBody)
                    .IsRequired();
 
+            // Audit: gönderenin tuzlu SHA-256 IP hash'i (base64 ~44 karakter). Nullable
+            // (IP çözülemezse / retention ile anonimleştirilince null). Domain sabiti
+            // Message.IpHashMaxLength (64) ile senkron.
+            builder.Property(m => m.SenderIpHash)
+                   .IsRequired(false)
+                   .HasMaxLength(Zn.Domain.Entity.Message.IpHashMaxLength);
+
             // Yeni mesaj veritabanı seviyesinde de okunmamış olarak başlar.
             builder.Property(m => m.IsRead)
                    .IsRequired()

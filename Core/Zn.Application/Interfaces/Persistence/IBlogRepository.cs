@@ -75,6 +75,15 @@ namespace Zn.Application.Interfaces.Persistence
         Task<BlogDetail?> GetDetailByIdAsync(Guid id, string? currentUserId, CancellationToken cancellationToken);
 
         /// <summary>
+        /// Verilen Id'ye sahip blogu admin audit detayıyla (kategori + yazar + <c>CreatorIpHash</c>)
+        /// döner; yoksa null. Yalnızca Admin sorgu yolunda kullanılır — audit alanı public yola
+        /// sızmaz. Yalnızca okuma amaçlıdır (AsNoTracking + projeksiyon). Soft delete edilmiş
+        /// bloglar da görülebilsin diye global query filter <c>IgnoreQueryFilters()</c> ile bypass
+        /// edilir (admin denetimi için).
+        /// </summary>
+        Task<BlogAuditDetail?> GetAuditDetailByIdAsync(Guid id, CancellationToken cancellationToken);
+
+        /// <summary>
         /// Verilen Id'ye sahip blogu takip edilen (tracked) entity olarak döner; yoksa null.
         /// Güncelleme/silme akışlarında yetki kontrolü (UserId) ve mutasyon için kullanılır.
         /// </summary>

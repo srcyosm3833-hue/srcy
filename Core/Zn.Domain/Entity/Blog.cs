@@ -29,6 +29,13 @@ namespace Zn.Domain.Entity
         public const int ImageUrlMaxLength = 500;
 
         /// <summary>
+        /// Hash'li IP alanlarının azami uzunluğu. Base64 kodlanmış SHA-256 çıktısı 44 karakterdir;
+        /// 64'lük üst sınır olası kodlama değişikliklerine pay bırakır. BlogConfiguration
+        /// HasMaxLength(64) ile senkron.
+        /// </summary>
+        public const int IpHashMaxLength = 64;
+
+        /// <summary>
         /// EF Core materyalizasyonu için parametresiz constructor.
         /// Uygulama kodu yerine <see cref="Create"/> factory'sini kullanmalıdır.
         /// </summary>
@@ -91,10 +98,19 @@ namespace Zn.Domain.Entity
         public DateTime? DeletedAt { get; private set; }
 
         /// <summary>
+        /// Blogu oluşturan kullanıcının istemci IP adresinin tuzlu SHA-256 hash'i (anonim audit).
+        /// Ham IP ASLA saklanmaz (KVKK). IP çözümlenemediğinde (örn. test ortamı) null kalır.
+        /// Yalnızca admin audit görünümünde döner; public yanıtlarda hiçbir zaman yer almaz.
+        /// Dışarıdan yalnızca okunabilir; yalnızca <see cref="Create"/> sırasında set edilir.
+        /// </summary>
+        public string? CreatorIpHash { get; private set; }
+
+        /// <summary>
         /// Geçerli bir Blog oluşturur. Tüm zorunlu alanlar boş/whitespace olamaz ve azami
         /// uzunluklarını aşamaz; aksi halde <see cref="BlogDomainException"/> fırlatılır.
         /// Yazar (<paramref name="userId"/>) ve kategori (<paramref name="categoryId"/>)
-        /// zorunludur.
+        /// zorunludur. <paramref name="ipHash"/> opsiyoneldir (anonim audit): verilirse hash'li
+        /// IP olarak saklanır, null/boş ise alan boş bırakılır.
         /// </summary>
         public static Blog Create(
             string title,
@@ -102,7 +118,8 @@ namespace Zn.Domain.Entity
             string coverImage,
             string blogImage,
             Guid categoryId,
-            string userId)
+            string userId,
+            string? ipHash = null)
         {
             if (categoryId == Guid.Empty)
             {
@@ -123,6 +140,7 @@ namespace Zn.Domain.Entity
                 BlogImage = NormalizeText(blogImage, nameof(blogImage), ImageUrlMaxLength),
                 CategoryId = categoryId,
                 UserId = userId,
+                CreatorIpHash = NormalizeIpHash(ipHash),
                 CreatedAt = DateTime.UtcNow
             };
         }
@@ -187,6 +205,27 @@ namespace Zn.Domain.Entity
             }
 
             return trimmed;
+        }
+
+        /// <summary>
+        /// Hash'li IP invariant'ı: null/boş ise null'a normalize edilir (audit opsiyoneldir),
+        /// aksi halde azami uzunluk aşılırsa <see cref="BlogDomainException"/> fırlatılır.
+        /// Hash deterministik base64 olduğundan trim edilmez.
+        /// </summary>
+        private static string? NormalizeIpHash(string? ipHash)
+        {
+            if (string.IsNullOrWhiteSpace(ipHash))
+            {
+                return null;
+            }
+
+            if (ipHash.Length > IpHashMaxLength)
+            {
+                throw new BlogDomainException(
+                    $"Blog creator IP hash cannot exceed {IpHashMaxLength} characters.");
+            }
+
+            return ipHash;
         }
 
         /// <summary>Açıklama invariant'ı: boş olmama (uzunluk sınırı yok — nvarchar(max)).</summary>

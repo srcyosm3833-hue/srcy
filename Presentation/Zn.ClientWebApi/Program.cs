@@ -72,6 +72,19 @@ builder.Services.PostConfigure<FileStorageOptions>(options =>
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
+// --- Audit altyapısı: istemci IP çözümleyici ---
+// IClientIpResolver, geçerli HTTP isteğinden IP'yi çözer (X-Forwarded-For öncelikli). Concrete
+// servis Scoped; handler'lar yalnızca IClientIpResolver arayüzünü alır (IHttpContextAccessor
+// handler imzalarına sızmaz → Wolverine codegen sorunu olmaz). IHttpContextAccessor kaydı zorunlu.
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<Zn.Application.Interfaces.Audit.IClientIpResolver, Zn.ClientWebApi.Audit.ClientIpResolver>();
+
+// --- Audit saklama süresi (retention) seçenekleri + temizlik background service ---
+// Eski IP hash'lerini anonimleştirir (null'a çeker) ve süresi geçmiş arama loglarını siler.
+builder.Services.Configure<Zn.ClientWebApi.Audit.AuditRetentionOptions>(
+    builder.Configuration.GetSection(Zn.ClientWebApi.Audit.AuditRetentionOptions.SectionName));
+builder.Services.AddHostedService<Zn.ClientWebApi.Audit.AuditRetentionService>();
+
 // --- AuthN/AuthZ, CORS ---
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddAuthorization();

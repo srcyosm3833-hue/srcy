@@ -56,6 +56,7 @@ namespace Zn.Persistence.Extensions
             services.AddScoped<IMessageRepository, MessageRepository>();
             services.AddScoped<IContactRepository, ContactRepository>();
             services.AddScoped<ISocialMediaRepository, SocialMediaRepository>();
+            services.AddScoped<ISearchLogRepository, SearchLogRepository>();
 
             return services;
         }

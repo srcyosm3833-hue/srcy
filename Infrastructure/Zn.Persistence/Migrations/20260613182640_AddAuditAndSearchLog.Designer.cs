@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Zn.Persistence.Context;
 
@@ -11,9 +12,11 @@ using Zn.Persistence.Context;
 namespace Zn.Persistence.Migrations
 {
     [DbContext(typeof(ZnBlogDbContext))]
-    partial class ZnBlogDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260613182640_AddAuditAndSearchLog")]
+    partial class AddAuditAndSearchLog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -106,5 +106,18 @@ namespace Zn.Persistence.Repositories
                 .Select(u => (bool?)u.IsDeleted)
                 .FirstOrDefaultAsync(cancellationToken) == true;
         }
+
+        /// <inheritdoc />
+        public async Task<string?> GetFullNameByIdAsync(string userId, CancellationToken cancellationToken)
+        {
+            // Filtresiz: arama logu snapshot'ı için kullanıcı soft delete edilmiş olsa bile çözülebilir.
+            // Tam ad DB tarafında birleştirilir; yalnızca tek kolon çekilir (AsNoTracking + projeksiyon).
+            return await _context.Users
+                .AsNoTracking()
+                .IgnoreQueryFilters()
+                .Where(u => u.Id == userId)
+                .Select(u => u.FirstName + " " + u.LastName)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
     }
 }

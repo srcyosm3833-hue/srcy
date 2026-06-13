@@ -22,5 +22,8 @@ namespace Zn.Application.Features.Blogs.Common
 
         /// <summary>Detay projeksiyonunu detay yanıtına eşler.</summary>
         public static partial BlogDetailResponse ToDetailResponse(BlogDetail source);
+
+        /// <summary>Admin audit detay projeksiyonunu audit detay yanıtına (CreatorIpHash dahil) eşler.</summary>
+        public static partial BlogAuditDetailResponse ToAuditDetailResponse(BlogAuditDetail source);
     }
 }

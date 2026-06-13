@@ -31,6 +31,13 @@ namespace Zn.Persistence.Configurations
             builder.Property(b => b.Description)
                    .IsRequired();
 
+            // Audit: oluşturanın tuzlu SHA-256 IP hash'i (base64 ~44 karakter). Nullable
+            // (IP çözülemezse / retention ile anonimleştirilince null). Domain sabiti
+            // Blog.IpHashMaxLength (64) ile senkron.
+            builder.Property(b => b.CreatorIpHash)
+                   .IsRequired(false)
+                   .HasMaxLength(Zn.Domain.Entity.Blog.IpHashMaxLength);
+
             builder.Property(b => b.CreatedAt)
                    .IsRequired();
 

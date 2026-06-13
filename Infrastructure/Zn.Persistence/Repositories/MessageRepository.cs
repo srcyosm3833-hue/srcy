@@ -58,7 +58,8 @@ namespace Zn.Persistence.Repositories
                     m.Subject,
                     m.MessageBody,
                     m.IsRead,
-                    m.CreatedAt))
+                    m.CreatedAt,
+                    m.SenderIpHash))
                 .ToListAsync(cancellationToken);
 
             return (items, totalCount);

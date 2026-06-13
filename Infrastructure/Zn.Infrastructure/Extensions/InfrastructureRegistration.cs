@@ -31,6 +31,10 @@ namespace Zn.Infrastructure.Extensions
             // Refresh token hash'leme servisi: stateless, deterministik SHA-256.
             services.AddSingleton<ITokenHasher, Sha256TokenHasher>();
 
+            // İstemci IP hash'leme servisi (audit): tuzlu, deterministik SHA-256. Tuz
+            // "Audit:IpHashSalt" yapılandırmasından okunur; stateless olduğu için Singleton uygundur.
+            services.AddSingleton<IIpHasher, Sha256IpHasher>();
+
             // Dosya depolama ayarları: "FileStorage" bölümünden bind edilir. RootPath fiziksel
             // yolu Program.cs'te WebRootPath'e göre doldurulur (Infrastructure ASP.NET hosting
             // tiplerini bilmez). Geliştirme için yerel disk; production'da bulut storage ile değişir.

@@ -14,6 +14,7 @@ namespace Zn.Application.Features.Messages.Common
     /// <param name="MessageBody">Mesaj içeriği.</param>
     /// <param name="IsRead">Mesaj okundu mu?</param>
     /// <param name="CreatedAt">Oluşturulma anı (UTC).</param>
+    /// <param name="SenderIpHash">Gönderenin tuzlu SHA-256 IP hash'i (anonim audit); çözülemediyse null.</param>
     public sealed record MessageListItem(
         Guid Id,
         string Name,
@@ -21,5 +22,6 @@ namespace Zn.Application.Features.Messages.Common
         string Subject,
         string MessageBody,
         bool IsRead,
-        DateTime CreatedAt);
+        DateTime CreatedAt,
+        string? SenderIpHash);
 }

@@ -2,6 +2,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Zn.Application.Common.Results;
 using Zn.Application.Features.Blogs.Common;
+using Zn.Application.Interfaces.Audit;
+using Zn.Application.Interfaces.Authentication;
 using Zn.Application.Interfaces.Persistence;
 using Zn.Domain.Entity;
 
@@ -12,12 +14,20 @@ namespace Zn.Application.Features.Blogs.Create
     /// Seçilen kategori yoksa Validation (400) döner; aksi halde <see cref="Blog.Create"/>
     /// factory'si ile invariant'lara uygun entity oluşturup kaydeder. Yazar token'dan gelen
     /// UserId'dir. Başarıda oluşturulan blogun detay yanıtı döner (controller 201 olarak sunar).
+    /// <para>
+    /// Audit (anonim): Oluşturan istemcinin IP adresi <see cref="IClientIpResolver"/> ile çözülür,
+    /// <see cref="IIpHasher"/> ile tuzlu hash'lenir (ham IP saklanmaz) ve <see cref="Blog.Create"/>
+    /// factory'sine geçirilir. IP çözülemezse hash null olur ve blog yine de oluşturulur (hata yok).
+    /// Bu alan yalnızca admin audit görünümünde döner; public yanıtlarda yer almaz.
+    /// </para>
     /// </summary>
     public static class CreateBlogCommandHandler
     {
         public static async Task<Result<BlogDetailResponse>> Handle(
             CreateBlogCommand command,
             IBlogRepository blogRepository,
+            IClientIpResolver clientIpResolver,
+            IIpHasher ipHasher,
             CancellationToken cancellationToken)
         {
             // Kategori varlık kontrolü: var olmayan kategoriye blog bağlanamaz.
@@ -31,6 +41,10 @@ namespace Zn.Application.Features.Blogs.Create
                     BlogErrors.CategoryNotFound(command.CategoryId));
             }
 
+            // İstemci IP'sini çöz ve saklamadan ÖNCE hash'le; çözülemezse null (audit opsiyonel,
+            // blog yine de oluşur). Ham IP hiçbir zaman entity'ye/DB'ye geçmez.
+            string? ipHash = ipHasher.Hash(clientIpResolver.ResolveIpAddress());
+
             // Invariant'lar (boş olmayan alanlar, azami uzunluk, geçerli yazar/kategori) Domain factory'sinde korunur.
             Blog blog = Blog.Create(
                 command.Title,
@@ -38,7 +52,8 @@ namespace Zn.Application.Features.Blogs.Create
                 command.CoverImage,
                 command.BlogImage,
                 command.CategoryId,
-                command.UserId);
+                command.UserId,
+                ipHash);
 
             await blogRepository.AddAsync(blog, cancellationToken);
             await blogRepository.SaveChangesAsync(cancellationToken);

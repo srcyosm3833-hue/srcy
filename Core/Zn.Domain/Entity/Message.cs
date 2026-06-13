@@ -41,6 +41,13 @@ namespace Zn.Domain.Entity
         public const int MessageBodyMaxLength = 2000;
 
         /// <summary>
+        /// Hash'li IP alanının azami uzunluğu. Base64 kodlanmış SHA-256 çıktısı 44 karakterdir;
+        /// 64'lük üst sınır olası kodlama değişikliklerine pay bırakır. MessageConfiguration
+        /// HasMaxLength(64) ile senkron.
+        /// </summary>
+        public const int IpHashMaxLength = 64;
+
+        /// <summary>
         /// EF Core materyalizasyonu için parametresiz constructor.
         /// Uygulama kodu yerine <see cref="Create"/> factory'sini kullanmalıdır.
         /// </summary>
@@ -77,11 +84,21 @@ namespace Zn.Domain.Entity
         public DateTime? DeletedAt { get; private set; }
 
         /// <summary>
+        /// Mesajı gönderen ziyaretçinin istemci IP adresinin tuzlu SHA-256 hash'i (anonim audit).
+        /// Ham IP ASLA saklanmaz (KVKK). IP çözümlenemediğinde (örn. test ortamı) null kalır.
+        /// Yalnızca admin mesaj kutusu görünümünde döner. Dışarıdan yalnızca okunabilir; yalnızca
+        /// <see cref="Create"/> sırasında set edilir.
+        /// </summary>
+        public string? SenderIpHash { get; private set; }
+
+        /// <summary>
         /// Ziyaretçi iletişim formundan geçerli bir Message oluşturur. Tüm metin alanları
         /// boş/whitespace olamaz ve ilgili azami uzunluğu aşamaz; aksi halde
         /// <see cref="MessageDomainException"/> fırlatılır. Mesaj okunmamış (IsRead=false) başlar.
+        /// <paramref name="ipHash"/> opsiyoneldir (anonim audit): verilirse hash'li IP olarak
+        /// saklanır, null/boş ise alan boş bırakılır.
         /// </summary>
-        public static Message Create(string name, string email, string subject, string messageBody)
+        public static Message Create(string name, string email, string subject, string messageBody, string? ipHash = null)
         {
             return new Message
             {
@@ -90,6 +107,7 @@ namespace Zn.Domain.Entity
                 Email = Normalize(email, EmailMaxLength, nameof(Email)),
                 Subject = Normalize(subject, SubjectMaxLength, nameof(Subject)),
                 MessageBody = Normalize(messageBody, MessageBodyMaxLength, nameof(MessageBody)),
+                SenderIpHash = NormalizeIpHash(ipHash),
                 IsRead = false,
                 CreatedAt = DateTime.UtcNow
             };
@@ -122,6 +140,27 @@ namespace Zn.Domain.Entity
             IsDeleted = true;
             DeletedAt = DateTime.UtcNow;
             UpdatedAt = DateTime.UtcNow;
+        }
+
+        /// <summary>
+        /// Hash'li IP invariant'ı: null/boş ise null'a normalize edilir (audit opsiyoneldir),
+        /// aksi halde azami uzunluk aşılırsa <see cref="MessageDomainException"/> fırlatılır.
+        /// Hash deterministik base64 olduğundan trim edilmez.
+        /// </summary>
+        private static string? NormalizeIpHash(string? ipHash)
+        {
+            if (string.IsNullOrWhiteSpace(ipHash))
+            {
+                return null;
+            }
+
+            if (ipHash.Length > IpHashMaxLength)
+            {
+                throw new MessageDomainException(
+                    $"Sender IP hash cannot exceed {IpHashMaxLength} characters.");
+            }
+
+            return ipHash;
         }
 
         /// <summary>Metin alanı invariant'ı: boş olmama + trim + azami uzunluk.</summary>
