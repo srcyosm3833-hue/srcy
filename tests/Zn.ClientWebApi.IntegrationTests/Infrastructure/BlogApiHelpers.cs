@@ -344,5 +344,15 @@ namespace Zn.ClientWebApi.IntegrationTests.Infrastructure
         public static Task<HttpResponseMessage> ToggleCommentLikeAsync(this HttpClient client, Guid commentId) =>
             client.PostAsync($"/api/comments/{commentId}/like", null);
 
+        // ---- Admin Comment Moderation (Faz 5) ----
+
+        /// <summary>
+        /// Calls GET /api/admin/comments with optional pagination parameters.
+        /// Requires an Admin-role Bearer token; returns 401 for anonymous, 403 for non-Admin roles.
+        /// </summary>
+        public static Task<HttpResponseMessage> GetAdminCommentsAsync(
+            this HttpClient client, int page = 1, int pageSize = 20) =>
+            client.GetAsync($"/api/admin/comments?page={page}&pageSize={pageSize}");
+
     }
 }

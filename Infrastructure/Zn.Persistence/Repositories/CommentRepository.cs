@@ -71,48 +71,65 @@ namespace Zn.Persistence.Repositories
             int pageSize,
             CancellationToken cancellationToken)
         {
-            // Yorumlar ortak düz moderasyon şekline projekte edilir (üst düzey: IsReply=false,
-            // ParentCommentId=null). Blog başlığı/yazar adı navigation üzerinden SQL tarafında çekilir.
-            // Comment global query filter'ı (silinmiş blogun yorumları dışlanır) otomatik uygulanır.
-            IQueryable<CommentModerationItem> comments = _context.Comments
+            // Yorumlar ve alt yorumlar ortak düz moderasyon şekline projekte edilir. EF Core, set
+            // operasyonunu (Concat/UNION ALL) yalnızca her iki taraf AYNI anonim tipe projekte
+            // edildiğinde SQL'e çevirebilir; constructor'lı record (CommentModerationItem) projeksiyonu
+            // istemci-projeksiyonu sayılıp set operasyonunu çeviremez. Bu yüzden önce anonim tipe
+            // projekte edilir, birleştirilir, sıralama + sayfalama DB'de yapılır; yalnız nihai sayfa
+            // (≤ pageSize) bellekte record'a maplenir. Global query filter'lar (silinmiş blog/kullanıcı)
+            // navigation üzerinden otomatik uygulanmaya devam eder.
+            var comments = _context.Comments
                 .AsNoTracking()
-                .Select(c => new CommentModerationItem(
+                .Select(c => new
+                {
                     c.Id,
-                    false,
+                    IsReply = false,
                     c.BlogId,
-                    c.Blog.Title,
+                    BlogTitle = c.Blog.Title,
                     c.UserId,
-                    c.User.FirstName + " " + c.User.LastName,
-                    c.CommentText,
+                    AuthorName = c.User.FirstName + " " + c.User.LastName,
+                    Text = c.CommentText,
                     c.CreatedAt,
-                    (Guid?)null));
+                    ParentCommentId = (Guid?)null,
+                });
 
-            // Alt yorumlar aynı şekle projekte edilir (IsReply=true, ParentCommentId=CommentId).
-            // BlogId/BlogTitle ana yorumun blogundan türetilir. SubComment global query filter'ı
-            // (silinmiş kullanıcının ya da silinmiş blogun alt yorumları dışlanır) otomatik uygulanır.
-            IQueryable<CommentModerationItem> replies = _context.SubComments
+            var replies = _context.SubComments
                 .AsNoTracking()
-                .Select(s => new CommentModerationItem(
+                .Select(s => new
+                {
                     s.Id,
-                    true,
-                    s.Comment.BlogId,
-                    s.Comment.Blog.Title,
+                    IsReply = true,
+                    BlogId = s.Comment.BlogId,
+                    BlogTitle = s.Comment.Blog.Title,
                     s.UserId,
-                    s.User.FirstName + " " + s.User.LastName,
-                    s.SubCommentText,
+                    AuthorName = s.User.FirstName + " " + s.User.LastName,
+                    Text = s.SubCommentText,
                     s.CreatedAt,
-                    (Guid?)s.CommentId));
+                    ParentCommentId = (Guid?)s.CommentId,
+                });
 
-            // İki küme veritabanı seviyesinde birleştirilir; sıralama + sayfalama da DB tarafında.
-            IQueryable<CommentModerationItem> combined = comments.Concat(replies);
+            var combined = comments.Concat(replies);
 
             int totalCount = await combined.CountAsync(cancellationToken);
 
-            List<CommentModerationItem> items = await combined
+            var rows = await combined
                 .OrderByDescending(i => i.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);
+
+            List<CommentModerationItem> items = rows
+                .Select(r => new CommentModerationItem(
+                    r.Id,
+                    r.IsReply,
+                    r.BlogId,
+                    r.BlogTitle,
+                    r.UserId,
+                    r.AuthorName,
+                    r.Text,
+                    r.CreatedAt,
+                    r.ParentCommentId))
+                .ToList();
 
             return (items, totalCount);
         }
