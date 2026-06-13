@@ -45,7 +45,10 @@ namespace Zn.Application.Features.Blogs.Create
 
             // Yanıtı DB'den tam projeksiyonla döndür (kategori adı + yazar adı dahil).
             // Blog az önce eklendiği için mevcuttur; null gelmesi beklenmez.
-            BlogDetail? detail = await blogRepository.GetDetailByIdAsync(blog.Id, cancellationToken);
+            // Yazarın kendi kimliğini geçiyoruz; yeni blogun hiç beğenisi olmadığı için
+            // IsLikedByCurrentUser doğal olarak false döner.
+            BlogDetail? detail =
+                await blogRepository.GetDetailByIdAsync(blog.Id, command.UserId, cancellationToken);
 
             BlogDetailResponse response = detail is not null
                 ? BlogMapper.ToDetailResponse(detail)
@@ -60,7 +63,9 @@ namespace Zn.Application.Features.Blogs.Create
                     AuthorId: blog.UserId,
                     AuthorName: string.Empty,
                     blog.CreatedAt,
-                    blog.UpdatedAt);
+                    blog.UpdatedAt,
+                    LikeCount: 0,
+                    IsLikedByCurrentUser: false);
 
             return Result.Success(response);
         }

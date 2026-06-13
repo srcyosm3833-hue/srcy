@@ -60,7 +60,9 @@ namespace Zn.Application.Features.Auth.Refresh
             User? user = await userManager.FindByIdAsync(existing.UserId);
             if (user is null)
             {
-                // Token geçerli ama kullanıcı yok (silinmiş) → güvenli tarafta kal.
+                // Token geçerli ama kullanıcı bulunamıyor: ya gerçekten yok ya da soft delete
+                // edilmiş (global query filter FindByIdAsync'i gizler). Her iki durumda da yeni
+                // token üretilmez → silinmiş kullanıcı refresh ile oturum yenileyemez. Güvenli 401.
                 return Result.Failure<AuthTokensResponse>(AuthErrors.InvalidRefreshToken);
             }
 

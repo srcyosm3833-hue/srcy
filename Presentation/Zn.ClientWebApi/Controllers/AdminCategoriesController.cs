@@ -14,12 +14,13 @@ using Zn.Domain.Authorization;
 namespace Zn.ClientWebApi.Controllers
 {
     /// <summary>
-    /// Kategorilerin yönetici (Admin) yazma uç noktaları: oluştur, güncelle, sil.
-    /// Tüm action'lar <c>[Authorize(Roles = "Admin")]</c> ile korunur — token yoksa 401,
-    /// rol yetersizse 403. Komutlar Wolverine üzerinden handler'lara gönderilir;
-    /// dönen <see cref="Result"/>'lar <see cref="ApiControllerBase"/> ile HTTP'ye eşlenir.
+    /// Kategorilerin içerik yöneticisi (Admin/Manager) yazma uç noktaları: oluştur, güncelle, sil.
+    /// Tüm action'lar <c>[Authorize(Roles = "Admin,Manager")]</c> ile korunur — token yoksa 401,
+    /// rol yetersizse 403 (A6 yetki matrisi: kategori CRUD Admin + Manager). Komutlar Wolverine
+    /// üzerinden handler'lara gönderilir; dönen <see cref="Result"/>'lar
+    /// <see cref="ApiControllerBase"/> ile HTTP'ye eşlenir.
     /// </summary>
-    [Authorize(Roles = RoleNames.Admin)]
+    [Authorize(Roles = $"{RoleNames.Admin},{RoleNames.Manager}")]
     [Route("api/admin/categories")]
     public sealed class AdminCategoriesController : ApiControllerBase
     {

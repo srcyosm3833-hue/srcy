@@ -16,6 +16,8 @@ namespace Zn.Application.Features.Comments.Common
     /// <param name="CreatedAt">Oluşturulma anı (UTC).</param>
     /// <param name="UpdatedAt">Son güncellenme anı (UTC); hiç düzenlenmediyse null.</param>
     /// <param name="SubCommentCount">Bu yoruma bağlı alt yorum sayısı (COUNT ile DB'de hesaplanır).</param>
+    /// <param name="LikeCount">Yorumun toplam beğeni sayısı (COUNT ile DB'de hesaplanır).</param>
+    /// <param name="IsLikedByCurrentUser">İsteği yapan kullanıcı bu yorumu beğenmiş mi (anonimde false).</param>
     public sealed record CommentListItem(
         Guid Id,
         string CommentText,
@@ -23,5 +25,7 @@ namespace Zn.Application.Features.Comments.Common
         string DisplayName,
         DateTime CreatedAt,
         DateTime? UpdatedAt,
-        int SubCommentCount);
+        int SubCommentCount,
+        int LikeCount,
+        bool IsLikedByCurrentUser);
 }

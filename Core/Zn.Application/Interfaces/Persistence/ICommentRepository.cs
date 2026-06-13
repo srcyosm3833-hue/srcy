@@ -23,11 +23,16 @@ namespace Zn.Application.Interfaces.Persistence
         /// sayısıyla birlikte döner. Yalnızca okuma amaçlıdır (AsNoTracking + DB seviyesinde
         /// projeksiyon; alt yorum sayısı COUNT ile).
         /// </summary>
+        /// <param name="currentUserId">
+        /// Verilirse her yorum için "bu kullanıcı beğendi mi" (IsLikedByCurrentUser) DB seviyesinde
+        /// (EXISTS) hesaplanır; null ise daima false döner (anonim).
+        /// </param>
         /// <returns>Geçerli sayfadaki liste öğeleri ve bloga ait toplam yorum sayısı.</returns>
         Task<(IReadOnlyList<CommentListItem> Items, int TotalCount)> GetPagedByBlogIdAsync(
             Guid blogId,
             int page,
             int pageSize,
+            string? currentUserId,
             CancellationToken cancellationToken);
 
         /// <summary>Verilen Id'ye sahip bir blog var mı? Yorum listeleme/ekleme öncesi doğrulama için.</summary>
@@ -35,10 +40,14 @@ namespace Zn.Application.Interfaces.Persistence
 
         /// <summary>
         /// Verilen Id'ye sahip yorumu tek bir liste öğesi projeksiyonu olarak döner (alt yorum
-        /// sayısı + yazar adı dahil); yoksa null. Create/Update sonrası yanıt üretmek için.
+        /// sayısı + yazar adı + beğeni bilgisi dahil); yoksa null. Create/Update sonrası yanıt üretmek için.
         /// Yalnızca okuma amaçlıdır (AsNoTracking + projeksiyon).
+        /// <para>
+        /// <paramref name="currentUserId"/> verilirse "bu kullanıcı beğendi mi" (IsLikedByCurrentUser)
+        /// DB seviyesinde (EXISTS) hesaplanır; null ise false döner.
+        /// </para>
         /// </summary>
-        Task<CommentListItem?> GetResponseByIdAsync(Guid id, CancellationToken cancellationToken);
+        Task<CommentListItem?> GetResponseByIdAsync(Guid id, string? currentUserId, CancellationToken cancellationToken);
 
         /// <summary>
         /// Verilen Id'ye sahip yorumu takip edilen (tracked) entity olarak döner; yoksa null.

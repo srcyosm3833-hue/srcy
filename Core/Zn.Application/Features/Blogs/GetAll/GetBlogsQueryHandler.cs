@@ -32,8 +32,11 @@ namespace Zn.Application.Features.Blogs.GetAll
                 _ => query.PageSize
             };
 
+            // Public liste: silinmiş bloglar gösterilmez (includeDeleted=false). Admin'in
+            // silinmişleri görmesi için includeDeleted'i query'ye taşıyan dilim Özellik 6'da eklenir.
             (IReadOnlyList<BlogListItem> items, int totalCount) =
-                await blogRepository.GetPagedAsync(page, pageSize, query.CategoryId, cancellationToken);
+                await blogRepository.GetPagedAsync(
+                    page, pageSize, query.CategoryId, false, query.CurrentUserId, cancellationToken);
 
             IReadOnlyList<BlogListItemResponse> mapped = BlogMapper.ToListItemResponseList(items);
 

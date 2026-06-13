@@ -58,7 +58,9 @@ namespace Zn.Application.Features.Blogs.Update
             await blogRepository.SaveChangesAsync(cancellationToken);
 
             // Güncel yanıtı tam projeksiyonla döndür (kategori adı + yazar adı dahil).
-            BlogDetail? detail = await blogRepository.GetDetailByIdAsync(blog.Id, cancellationToken);
+            // IsLikedByCurrentUser için isteği yapan kullanıcının kimliğini geçiyoruz.
+            BlogDetail? detail =
+                await blogRepository.GetDetailByIdAsync(blog.Id, command.RequestingUserId, cancellationToken);
 
             BlogDetailResponse response = detail is not null
                 ? BlogMapper.ToDetailResponse(detail)
@@ -73,7 +75,9 @@ namespace Zn.Application.Features.Blogs.Update
                     AuthorId: blog.UserId,
                     AuthorName: string.Empty,
                     blog.CreatedAt,
-                    blog.UpdatedAt);
+                    blog.UpdatedAt,
+                    LikeCount: 0,
+                    IsLikedByCurrentUser: false);
 
             return Result.Success(response);
         }

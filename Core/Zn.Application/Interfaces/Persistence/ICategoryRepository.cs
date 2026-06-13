@@ -21,8 +21,15 @@ namespace Zn.Application.Interfaces.Persistence
         /// <summary>
         /// Tüm kategorileri, her birine ait blog sayısıyla birlikte ada göre sıralı döner.
         /// Yalnızca okuma amaçlıdır (AsNoTracking + DB seviyesinde projeksiyon).
+        /// <para>
+        /// <paramref name="includeDeleted"/> true ise soft delete edilmiş kategoriler de
+        /// listeye dahil edilir (global query filter <c>IgnoreQueryFilters()</c> ile bypass edilir);
+        /// yalnızca Admin/Manager sorgularında kullanılmalıdır. Varsayılan (false) public davranıştır.
+        /// </para>
         /// </summary>
-        Task<IReadOnlyList<CategoryWithBlogCount>> GetAllWithBlogCountAsync(CancellationToken cancellationToken);
+        Task<IReadOnlyList<CategoryWithBlogCount>> GetAllWithBlogCountAsync(
+            bool includeDeleted,
+            CancellationToken cancellationToken);
 
         /// <summary>
         /// Verilen Id'ye sahip kategoriyi blog sayısıyla birlikte döner; yoksa null.
@@ -48,9 +55,6 @@ namespace Zn.Application.Interfaces.Persistence
 
         /// <summary>Yeni bir kategori ekler (henüz kaydedilmez; bkz. <see cref="SaveChangesAsync"/>).</summary>
         Task AddAsync(Category category, CancellationToken cancellationToken);
-
-        /// <summary>Takip edilen bir kategoriyi silmek üzere işaretler (bkz. <see cref="SaveChangesAsync"/>).</summary>
-        void Remove(Category category);
 
         /// <summary>Bekleyen değişiklikleri veritabanına yazar.</summary>
         Task SaveChangesAsync(CancellationToken cancellationToken);

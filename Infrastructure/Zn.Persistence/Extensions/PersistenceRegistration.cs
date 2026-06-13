@@ -46,10 +46,13 @@ namespace Zn.Persistence.Extensions
 
             // Repository kayıtları: DbContext Scoped olduğu için repository de Scoped.
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IBlogRepository, BlogRepository>();
             services.AddScoped<ICommentRepository, CommentRepository>();
             services.AddScoped<ISubCommentRepository, SubCommentRepository>();
+            services.AddScoped<IBlogLikeRepository, BlogLikeRepository>();
+            services.AddScoped<ICommentLikeRepository, CommentLikeRepository>();
             services.AddScoped<IMessageRepository, MessageRepository>();
             services.AddScoped<IContactRepository, ContactRepository>();
             services.AddScoped<ISocialMediaRepository, SocialMediaRepository>();

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Riok.Mapperly.Abstractions;
 
 namespace Zn.Application.Features.SubComments.Common
@@ -14,6 +15,10 @@ namespace Zn.Application.Features.SubComments.Common
         /// <summary>Tek bir alt yorum projeksiyonunu yanıta eşler; IsEdited türetilir.</summary>
         [MapProperty(nameof(SubCommentListItem.UpdatedAt), nameof(SubCommentResponse.IsEdited), Use = nameof(ComputeIsEdited))]
         public static partial SubCommentResponse ToResponse(SubCommentListItem source);
+
+        /// <summary>Liste projeksiyonu koleksiyonunu alt yorum yanıt listesine eşler.</summary>
+        public static partial IReadOnlyList<SubCommentResponse> ToResponseList(
+            IReadOnlyList<SubCommentListItem> source);
 
         /// <summary>UpdatedAt'ten isEdited türetir: alt yorum en az bir kez güncellenmişse true.</summary>
         private static bool ComputeIsEdited(System.DateTime? updatedAt) => updatedAt is not null;

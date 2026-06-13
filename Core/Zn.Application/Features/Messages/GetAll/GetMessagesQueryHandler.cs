@@ -30,8 +30,10 @@ namespace Zn.Application.Features.Messages.GetAll
                 _ => query.PageSize
             };
 
+            // Silinmemiş mesajlar (includeDeleted=false). Admin'in silinmişleri görmesi için
+            // includeDeleted'i query'ye taşıyan dilim Özellik 7'de eklenir.
             (IReadOnlyList<MessageListItem> items, int totalCount) =
-                await messageRepository.GetPagedAsync(page, pageSize, cancellationToken);
+                await messageRepository.GetPagedAsync(page, pageSize, false, cancellationToken);
 
             IReadOnlyList<MessageResponse> mapped = MessageMapper.ToResponseList(items);
 

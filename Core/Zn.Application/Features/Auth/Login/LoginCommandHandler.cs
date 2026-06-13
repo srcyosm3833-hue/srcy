@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Zn.Application.Common.Results;
 using Zn.Application.Features.Auth.Common;
+using Zn.Application.Interfaces.Persistence;
 using Zn.Domain.Entity;
 
 namespace Zn.Application.Features.Auth.Login
@@ -14,6 +15,12 @@ namespace Zn.Application.Features.Auth.Login
     /// (lockout açık), başarıda access + refresh token üretir.
     /// Kullanıcı yoksa da yanlış şifredeki ile AYNI jenerik 401 döner —
     /// kullanıcı varlığı ve "hangi alan hatalı" bilgisi sızdırılmaz.
+    /// <para>
+    /// Soft delete edilmiş kullanıcı login olamaz: <see cref="UserManager{TUser}.FindByEmailAsync"/>
+    /// global query filter nedeniyle silinmiş kullanıcıyı null döndürür. Bu durumda filtresiz bir
+    /// kontrolle (<see cref="IUserRepository.IsDeletedByEmailAsync"/>) hesabın silinmiş olup olmadığı
+    /// ayırt edilir ve anlamlı "AccountDisabled" (401) döndürülür; hesap gerçekten yoksa jenerik 401 kalır.
+    /// </para>
     /// </summary>
     public static class LoginCommandHandler
     {
@@ -21,15 +28,19 @@ namespace Zn.Application.Features.Auth.Login
             LoginCommand command,
             UserManager<User> userManager,
             SignInManager<User> signInManager,
+            IUserRepository userRepository,
             IAuthTokenFactory tokenFactory,
             CancellationToken cancellationToken)
         {
             User? user = await userManager.FindByEmailAsync(command.Email);
             if (user is null)
             {
-                // Kullanıcı yok: yine de jenerik 401. (Identity hash karşılaştırması
-                // yapılmadığından küçük bir timing farkı kalır; kabul edilebilir risk.)
-                return Result.Failure<AuthTokensResponse>(AuthErrors.InvalidCredentials);
+                // Kullanıcı normal sorguda yok. Soft delete edilmiş olabilir (filtre gizliyor) →
+                // filtresiz kontrol et: silinmişse anlamlı "AccountDisabled", değilse jenerik 401.
+                bool isDeleted = await userRepository.IsDeletedByEmailAsync(command.Email, cancellationToken);
+                return isDeleted
+                    ? Result.Failure<AuthTokensResponse>(AuthErrors.AccountDisabled)
+                    : Result.Failure<AuthTokensResponse>(AuthErrors.InvalidCredentials);
             }
 
             SignInResult signInResult = await signInManager.CheckPasswordSignInAsync(

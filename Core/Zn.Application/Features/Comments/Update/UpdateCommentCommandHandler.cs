@@ -40,7 +40,9 @@ namespace Zn.Application.Features.Comments.Update
             await commentRepository.SaveChangesAsync(cancellationToken);
 
             // Güncel yanıtı projeksiyonla döndür (yazar adı + alt yorum sayısı dahil).
-            CommentListItem? updated = await commentRepository.GetResponseByIdAsync(comment.Id, cancellationToken);
+            // IsLikedByCurrentUser için isteği yapan (sahip) kullanıcının kimliğini geçiyoruz.
+            CommentListItem? updated =
+                await commentRepository.GetResponseByIdAsync(comment.Id, command.RequestingUserId, cancellationToken);
 
             CommentResponse response = updated is not null
                 ? CommentMapper.ToResponse(updated)
@@ -52,7 +54,9 @@ namespace Zn.Application.Features.Comments.Update
                     comment.CreatedAt,
                     comment.UpdatedAt,
                     IsEdited: comment.UpdatedAt is not null,
-                    SubCommentCount: 0);
+                    SubCommentCount: 0,
+                    LikeCount: 0,
+                    IsLikedByCurrentUser: false);
 
             return Result.Success(response);
         }

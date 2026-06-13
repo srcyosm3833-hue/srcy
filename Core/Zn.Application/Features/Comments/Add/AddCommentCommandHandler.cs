@@ -35,7 +35,10 @@ namespace Zn.Application.Features.Comments.Add
 
             // Yanıtı DB'den projeksiyonla döndür (yazar adı + alt yorum sayısı dahil).
             // Yorum az önce eklendiği için mevcuttur; null gelmesi beklenmez.
-            CommentListItem? created = await commentRepository.GetResponseByIdAsync(comment.Id, cancellationToken);
+            // Yorumu yapanın kimliğini geçiyoruz; yeni yorumun hiç beğenisi olmadığı için
+            // IsLikedByCurrentUser doğal olarak false döner.
+            CommentListItem? created =
+                await commentRepository.GetResponseByIdAsync(comment.Id, command.UserId, cancellationToken);
 
             CommentResponse response = created is not null
                 ? CommentMapper.ToResponse(created)
@@ -47,7 +50,9 @@ namespace Zn.Application.Features.Comments.Add
                     comment.CreatedAt,
                     comment.UpdatedAt,
                     IsEdited: comment.UpdatedAt is not null,
-                    SubCommentCount: 0);
+                    SubCommentCount: 0,
+                    LikeCount: 0,
+                    IsLikedByCurrentUser: false);
 
             return Result.Success(response);
         }

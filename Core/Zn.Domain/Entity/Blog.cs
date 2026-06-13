@@ -20,7 +20,7 @@ namespace Zn.Domain.Entity
     /// migration/şema ile birebir uyumludur — yeni migration gerekmez.
     /// </para>
     /// </summary>
-    public class Blog : BaseEntity
+    public class Blog : BaseEntity, ISoftDeletable
     {
         /// <summary>Başlığın azami uzunluğu. BlogConfiguration'daki HasMaxLength(150) ile senkron.</summary>
         public const int TitleMaxLength = 150;
@@ -72,6 +72,23 @@ namespace Zn.Domain.Entity
 
         /// <summary>Navigation property: Bloga yapılan yorumlar (1 Blog - N Comment).</summary>
         public ICollection<Comment> Comments { get; private set; } = new List<Comment>();
+
+        /// <summary>
+        /// Navigation property: Bloga yapılan beğeniler (1 Blog - N BlogLike). Beğeni sayısı
+        /// ve "mevcut kullanıcı beğendi mi" bilgisi okuma projeksiyonlarında bu koleksiyon
+        /// üzerinden DB seviyesinde (COUNT / EXISTS) hesaplanır; koleksiyon belleğe çekilmez.
+        /// </summary>
+        public ICollection<BlogLike> Likes { get; private set; } = new List<BlogLike>();
+
+        /// <summary>
+        /// Kayıt soft delete edilmişse true. Dışarıdan yalnızca okunabilir; değişiklik
+        /// <see cref="SoftDelete"/> mutator'ı üzerinden yapılır. EF Core global query filter'ı
+        /// bu alana göre silinmiş blogları varsayılan sorgulardan dışlar.
+        /// </summary>
+        public bool IsDeleted { get; private set; }
+
+        /// <summary>Soft delete'in gerçekleştiği an (UTC); kayıt aktifse null.</summary>
+        public DateTime? DeletedAt { get; private set; }
 
         /// <summary>
         /// Geçerli bir Blog oluşturur. Tüm zorunlu alanlar boş/whitespace olamaz ve azami
@@ -132,6 +149,24 @@ namespace Zn.Domain.Entity
             CoverImage = NormalizeText(coverImage, nameof(coverImage), ImageUrlMaxLength);
             BlogImage = NormalizeText(blogImage, nameof(blogImage), ImageUrlMaxLength);
             CategoryId = categoryId;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        /// <summary>
+        /// Blogu soft delete olarak işaretler: <see cref="IsDeleted"/>=true ve
+        /// <see cref="DeletedAt"/>=DateTime.UtcNow set eder, <see cref="BaseEntity{TId}.UpdatedAt"/>'i
+        /// günceller. Kayıt veritabanında kalır; global query filter sayesinde sonraki sorgularda
+        /// görünmez. Zaten silinmiş bir kayıtta çağrılması idempotenttir (durum değişmez).
+        /// </summary>
+        public void SoftDelete()
+        {
+            if (IsDeleted)
+            {
+                return;
+            }
+
+            IsDeleted = true;
+            DeletedAt = DateTime.UtcNow;
             UpdatedAt = DateTime.UtcNow;
         }
 

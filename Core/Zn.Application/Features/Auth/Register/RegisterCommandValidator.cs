@@ -32,8 +32,9 @@ namespace Zn.Application.Features.Auth.Register
                 .Matches("[a-z]").WithMessage("Password must contain at least one lowercase letter.")
                 .Matches("[0-9]").WithMessage("Password must contain at least one digit.");
 
+            // ImageUrl opsiyoneldir (boş/null kabul edilir). Boş gelirse handler
+            // varsayılan avatar atar. Yalnızca dolu geldiğinde uzunluk sınırı uygulanır.
             RuleFor(x => x.ImageUrl)
-                .NotEmpty().WithMessage("Image URL is required.")
                 .MaximumLength(500).WithMessage("Image URL must not exceed 500 characters.");
         }
     }

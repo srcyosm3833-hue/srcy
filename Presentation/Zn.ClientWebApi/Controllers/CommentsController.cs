@@ -10,6 +10,7 @@ using Zn.Application.Features.Comments.Add;
 using Zn.Application.Features.Comments.Common;
 using Zn.Application.Features.Comments.Delete;
 using Zn.Application.Features.Comments.GetByBlogId;
+using Zn.Application.Features.Comments.ToggleLike;
 using Zn.Application.Features.Comments.Update;
 
 namespace Zn.ClientWebApi.Controllers
@@ -49,7 +50,7 @@ namespace Zn.ClientWebApi.Controllers
         {
             Result<PagedResult<CommentResponse>> result =
                 await _messageBus.InvokeAsync<Result<PagedResult<CommentResponse>>>(
-                    new GetCommentsByBlogIdQuery(blogId, page, pageSize), cancellationToken);
+                    new GetCommentsByBlogIdQuery(blogId, page, pageSize, GetUserId()), cancellationToken);
 
             return HandleResult(result);
         }
@@ -139,6 +140,38 @@ namespace Zn.ClientWebApi.Controllers
 
             Result result = await _messageBus.InvokeAsync<Result>(
                 new DeleteCommentCommand(id, userId, IsAdmin()), cancellationToken);
+
+            return HandleResult(result);
+        }
+
+        /// <summary>
+        /// Yorumun beğenisini açıp kapatır (toggle). Giriş yapmış her kullanıcı kullanabilir; beğeniyi
+        /// yapan kullanıcı token'dan alınır (gövdeden ASLA). Mevcut beğeni varsa kaldırılır, yoksa
+        /// eklenir; işlem idempotenttir. Başarıda 200 + { liked, likeCount }; yorum yoksa 404; token
+        /// yoksa 401.
+        /// <para>
+        /// Yorum kimliği bloga bağlı olmadan tekildir; bu nedenle bu uç, controller'ın
+        /// <c>api/blogs/{blogId}/comments</c> route grubundan bağımsız, mutlak route ile
+        /// <c>POST /api/comments/{id}/like</c> olarak tanımlanır.
+        /// </para>
+        /// </summary>
+        [HttpPost("/api/comments/{id:guid}/like")]
+        [Authorize]
+        [ProducesResponseType(typeof(CommentLikeToggleResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> ToggleLike(Guid id, CancellationToken cancellationToken)
+        {
+            // Beğeniyi yapan token'dan; gövdedeki hiçbir UserId alanı kabul edilmez.
+            string? userId = GetUserId();
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
+
+            Result<CommentLikeToggleResponse> result =
+                await _messageBus.InvokeAsync<Result<CommentLikeToggleResponse>>(
+                    new ToggleCommentLikeCommand(id, userId), cancellationToken);
 
             return HandleResult(result);
         }

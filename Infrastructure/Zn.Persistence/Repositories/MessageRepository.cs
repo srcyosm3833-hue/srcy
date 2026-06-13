@@ -30,9 +30,17 @@ namespace Zn.Persistence.Repositories
         public async Task<(IReadOnlyList<MessageListItem> Items, int TotalCount)> GetPagedAsync(
             int page,
             int pageSize,
+            bool includeDeleted,
             CancellationToken cancellationToken)
         {
             IQueryable<Message> query = _context.Messages.AsNoTracking();
+
+            // Admin/Manager sorgusu: soft delete edilmiş mesajları da görmek için global query
+            // filter bypass edilir. Varsayılan (false) sorguda silinmiş mesajlar zaten dışlanır.
+            if (includeDeleted)
+            {
+                query = query.IgnoreQueryFilters();
+            }
 
             int totalCount = await query.CountAsync(cancellationToken);
 

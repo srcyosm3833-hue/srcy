@@ -63,6 +63,15 @@ namespace Zn.ClientWebApi.Controllers
         /// <summary>Geçerli kullanıcının Admin rolünde olup olmadığını döner.</summary>
         protected bool IsAdmin() => User.IsInRole(RoleNames.Admin);
 
+        /// <summary>Geçerli kullanıcının Manager rolünde olup olmadığını döner.</summary>
+        protected bool IsManager() => User.IsInRole(RoleNames.Manager);
+
+        /// <summary>
+        /// Geçerli kullanıcının Admin <b>veya</b> Manager rolünde olup olmadığını döner.
+        /// İçerik yönetimi (kategori, mesaj vb.) uçlarında ortak yetki kontrolü için kullanılır.
+        /// </summary>
+        protected bool IsAdminOrManager() => IsAdmin() || IsManager();
+
         /// <summary>Bir <see cref="Error"/>'ü uygun durum kodlu ProblemDetails'e çevirir.</summary>
         private IActionResult Problem(Error error)
         {

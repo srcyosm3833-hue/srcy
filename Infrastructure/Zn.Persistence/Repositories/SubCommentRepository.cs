@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -29,6 +31,38 @@ namespace Zn.Persistence.Repositories
             return await _context.Comments
                 .AsNoTracking()
                 .AnyAsync(c => c.Id == commentId, cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public async Task<(IReadOnlyList<SubCommentListItem> Items, int TotalCount)> GetPagedByCommentIdAsync(
+            Guid commentId,
+            int page,
+            int pageSize,
+            CancellationToken cancellationToken)
+        {
+            IQueryable<SubComment> query = _context.SubComments
+                .AsNoTracking()
+                .Where(s => s.CommentId == commentId);
+
+            int totalCount = await query.CountAsync(cancellationToken);
+
+            // En yeni alt yorumlar önce (yorum listeleme deseniyle tutarlı). Projeksiyon DB
+            // seviyesinde: yazar adı SQL tarafında birleştirilir, User navigation belleğe çekilmez.
+            List<SubCommentListItem> items = await query
+                .OrderByDescending(s => s.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(s => new SubCommentListItem(
+                    s.Id,
+                    s.SubCommentText,
+                    s.CommentId,
+                    s.UserId,
+                    s.User.FirstName + " " + s.User.LastName,
+                    s.CreatedAt,
+                    s.UpdatedAt))
+                .ToListAsync(cancellationToken);
+
+            return (items, totalCount);
         }
 
         /// <inheritdoc />

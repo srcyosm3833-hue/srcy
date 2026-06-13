@@ -15,7 +15,16 @@ namespace Zn.Application.Features.Blogs.GetAll
     /// <param name="Page">1 tabanlı sayfa numarası (varsayılan 1).</param>
     /// <param name="PageSize">Sayfa başına öğe sayısı (varsayılan 10, üst sınır <see cref="MaxPageSize"/>).</param>
     /// <param name="CategoryId">Verilirse yalnızca bu kategoriye ait bloglar döner.</param>
-    public sealed record GetBlogsQuery(int Page = 1, int PageSize = 10, Guid? CategoryId = null)
+    /// <param name="CurrentUserId">
+    /// İsteği yapan kullanıcının kimliği — token'dan doldurulur, gövdeden alınmaz. Verilirse her
+    /// blog için "bu kullanıcı beğendi mi" (IsLikedByCurrentUser) DB'de hesaplanır; anonimde null
+    /// olur ve IsLikedByCurrentUser daima false döner.
+    /// </param>
+    public sealed record GetBlogsQuery(
+        int Page = 1,
+        int PageSize = 10,
+        Guid? CategoryId = null,
+        string? CurrentUserId = null)
     {
         /// <summary>İzin verilen azami sayfa boyutu. İstemci bunu aşan değer isterse buna sabitlenir.</summary>
         public const int MaxPageSize = 50;

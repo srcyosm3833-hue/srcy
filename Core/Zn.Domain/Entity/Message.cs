@@ -19,7 +19,7 @@ namespace Zn.Domain.Entity
     /// migration/şema ile birebir uyumludur — yeni migration gerekmez.
     /// </para>
     /// </summary>
-    public class Message : BaseEntity
+    public class Message : BaseEntity, ISoftDeletable
     {
         /// <summary>
         /// Gönderen adının azami uzunluğu. MessageConfiguration'daki HasMaxLength(100) ile
@@ -67,6 +67,16 @@ namespace Zn.Domain.Entity
         public bool IsRead { get; private set; }
 
         /// <summary>
+        /// Kayıt soft delete edilmişse true. Dışarıdan yalnızca okunabilir; değişiklik
+        /// <see cref="SoftDelete"/> mutator'ı üzerinden yapılır. EF Core global query filter'ı
+        /// bu alana göre silinmiş mesajları varsayılan sorgulardan dışlar.
+        /// </summary>
+        public bool IsDeleted { get; private set; }
+
+        /// <summary>Soft delete'in gerçekleştiği an (UTC); kayıt aktifse null.</summary>
+        public DateTime? DeletedAt { get; private set; }
+
+        /// <summary>
         /// Ziyaretçi iletişim formundan geçerli bir Message oluşturur. Tüm metin alanları
         /// boş/whitespace olamaz ve ilgili azami uzunluğu aşamaz; aksi halde
         /// <see cref="MessageDomainException"/> fırlatılır. Mesaj okunmamış (IsRead=false) başlar.
@@ -93,6 +103,24 @@ namespace Zn.Domain.Entity
         public void MarkAsRead(bool isRead)
         {
             IsRead = isRead;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        /// <summary>
+        /// Mesajı soft delete olarak işaretler: <see cref="IsDeleted"/>=true ve
+        /// <see cref="DeletedAt"/>=DateTime.UtcNow set eder, <see cref="BaseEntity{TId}.UpdatedAt"/>'i
+        /// günceller. Kayıt veritabanında kalır; global query filter sayesinde sonraki sorgularda
+        /// görünmez. Zaten silinmiş bir kayıtta çağrılması idempotenttir (durum değişmez).
+        /// </summary>
+        public void SoftDelete()
+        {
+            if (IsDeleted)
+            {
+                return;
+            }
+
+            IsDeleted = true;
+            DeletedAt = DateTime.UtcNow;
             UpdatedAt = DateTime.UtcNow;
         }
 

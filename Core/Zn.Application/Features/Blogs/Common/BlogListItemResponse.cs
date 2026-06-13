@@ -13,6 +13,8 @@ namespace Zn.Application.Features.Blogs.Common
     /// <param name="CategoryName">Bağlı kategorinin adı.</param>
     /// <param name="AuthorName">Yazarın tam adı (FirstName + LastName).</param>
     /// <param name="CreatedAt">Oluşturulma anı (UTC).</param>
+    /// <param name="LikeCount">Blogun toplam beğeni sayısı.</param>
+    /// <param name="IsLikedByCurrentUser">İsteği yapan kullanıcı bu blogu beğenmiş mi (anonimde false).</param>
     public sealed record BlogListItemResponse(
         Guid Id,
         string Title,
@@ -20,5 +22,7 @@ namespace Zn.Application.Features.Blogs.Common
         Guid CategoryId,
         string CategoryName,
         string AuthorName,
-        DateTime CreatedAt);
+        DateTime CreatedAt,
+        int LikeCount,
+        bool IsLikedByCurrentUser);
 }

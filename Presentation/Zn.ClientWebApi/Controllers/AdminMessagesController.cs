@@ -14,11 +14,12 @@ using Zn.Domain.Authorization;
 namespace Zn.ClientWebApi.Controllers
 {
     /// <summary>
-    /// Mesaj kutusunun yönetici (Admin) uç noktaları (<c>api/admin/messages</c>): sayfalı listeleme
-    /// (okunmamışlar önce) ve okunma durumunu açıkça (true/false) set etme. Tüm action'lar
-    /// <c>[Authorize(Roles = "Admin")]</c> ile korunur — token yoksa 401, rol yetersizse 403.
+    /// Mesaj kutusunun içerik yöneticisi (Admin/Manager) uç noktaları (<c>api/admin/messages</c>):
+    /// sayfalı listeleme (okunmamışlar önce) ve okunma durumunu açıkça (true/false) set etme. Tüm
+    /// action'lar <c>[Authorize(Roles = "Admin,Manager")]</c> ile korunur — token yoksa 401, rol
+    /// yetersizse 403 (A6 yetki matrisi: mesaj listeleme/yönetim Admin + Manager).
     /// </summary>
-    [Authorize(Roles = RoleNames.Admin)]
+    [Authorize(Roles = $"{RoleNames.Admin},{RoleNames.Manager}")]
     [Route("api/admin/messages")]
     public sealed class AdminMessagesController : ApiControllerBase
     {

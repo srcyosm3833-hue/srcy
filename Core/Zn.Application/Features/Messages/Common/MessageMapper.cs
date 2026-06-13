@@ -22,8 +22,12 @@ namespace Zn.Application.Features.Messages.Common
 
         /// <summary>
         /// Tracked Message entity'sini mesaj yanıtına eşler. Okunma durumu güncellendikten sonra
-        /// güncel kaydı dönmek için kullanılır.
+        /// güncel kaydı dönmek için kullanılır. Soft delete alanları (IsDeleted/DeletedAt) ve
+        /// UpdatedAt yanıta taşınmaz; kaynakta yok sayılır.
         /// </summary>
+        [MapperIgnoreSource(nameof(Message.IsDeleted))]
+        [MapperIgnoreSource(nameof(Message.DeletedAt))]
+        [MapperIgnoreSource(nameof(Message.UpdatedAt))]
         public static partial MessageResponse ToResponse(Message source);
     }
 }

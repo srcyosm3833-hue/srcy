@@ -15,7 +15,7 @@ namespace Zn.Domain.Entity
     /// Category nesnesi hiçbir zaman var olamaz.
     /// </para>
     /// </summary>
-    public class Category : BaseEntity
+    public class Category : BaseEntity, ISoftDeletable
     {
         /// <summary>
         /// Kategori adının azami uzunluğu. CategoryConfiguration'daki HasMaxLength(100)
@@ -44,6 +44,16 @@ namespace Zn.Domain.Entity
         public ICollection<Blog> Blogs { get; private set; } = new List<Blog>();
 
         /// <summary>
+        /// Kayıt soft delete edilmişse true. Dışarıdan yalnızca okunabilir; değişiklik
+        /// <see cref="SoftDelete"/> mutator'ı üzerinden yapılır. EF Core global query filter'ı
+        /// bu alana göre silinmiş kayıtları varsayılan sorgulardan dışlar.
+        /// </summary>
+        public bool IsDeleted { get; private set; }
+
+        /// <summary>Soft delete'in gerçekleştiği an (UTC); kayıt aktifse null.</summary>
+        public DateTime? DeletedAt { get; private set; }
+
+        /// <summary>
         /// Geçerli bir Category oluşturur. Ad boş/whitespace olamaz ve
         /// <see cref="CategoryNameMaxLength"/>'i aşamaz; aksi halde
         /// <see cref="CategoryDomainException"/> fırlatılır.
@@ -68,6 +78,24 @@ namespace Zn.Domain.Entity
         public void Rename(string categoryName)
         {
             CategoryName = Normalize(categoryName);
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        /// <summary>
+        /// Kategoriyi soft delete olarak işaretler: <see cref="IsDeleted"/>=true ve
+        /// <see cref="DeletedAt"/>=DateTime.UtcNow set eder, <see cref="BaseEntity{TId}.UpdatedAt"/>'i
+        /// günceller. Kayıt veritabanında kalır; global query filter sayesinde sonraki sorgularda
+        /// görünmez. Zaten silinmiş bir kayıtta çağrılması idempotenttir (durum değişmez).
+        /// </summary>
+        public void SoftDelete()
+        {
+            if (IsDeleted)
+            {
+                return;
+            }
+
+            IsDeleted = true;
+            DeletedAt = DateTime.UtcNow;
             UpdatedAt = DateTime.UtcNow;
         }
 

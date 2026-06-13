@@ -17,6 +17,8 @@ namespace Zn.Application.Features.Blogs.Common
     /// <param name="AuthorName">Yazarın tam adı (FirstName + LastName).</param>
     /// <param name="CreatedAt">Oluşturulma anı (UTC).</param>
     /// <param name="UpdatedAt">Son güncellenme anı (UTC); hiç güncellenmediyse null.</param>
+    /// <param name="LikeCount">Blogun toplam beğeni sayısı.</param>
+    /// <param name="IsLikedByCurrentUser">İsteği yapan kullanıcı bu blogu beğenmiş mi (anonimde false).</param>
     public sealed record BlogDetailResponse(
         Guid Id,
         string Title,
@@ -28,5 +30,7 @@ namespace Zn.Application.Features.Blogs.Common
         string AuthorId,
         string AuthorName,
         DateTime CreatedAt,
-        DateTime? UpdatedAt);
+        DateTime? UpdatedAt,
+        int LikeCount,
+        bool IsLikedByCurrentUser);
 }

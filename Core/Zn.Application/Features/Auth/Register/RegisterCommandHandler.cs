@@ -16,6 +16,13 @@ namespace Zn.Application.Features.Auth.Register
     /// </summary>
     public static class RegisterCommandHandler
     {
+        /// <summary>
+        /// Profil görseli verilmediğinde atanan varsayılan avatar (gravatar mystery-person).
+        /// Admin seed'iyle (AdminUserOptions) aynı değer; DB sütunu NOT NULL olduğu için
+        /// boş bırakılan kayıtlarda da geçerli bir değer garanti edilir.
+        /// </summary>
+        private const string DefaultImageUrl = "https://www.gravatar.com/avatar/?d=mp";
+
         public static async Task<Result<RegisterResponse>> Handle(
             RegisterCommand command,
             UserManager<User> userManager,
@@ -34,7 +41,9 @@ namespace Zn.Application.Features.Auth.Register
                 Email = command.Email,
                 FirstName = command.FirstName,
                 LastName = command.LastName,
-                ImageUrl = command.ImageUrl
+                ImageUrl = string.IsNullOrWhiteSpace(command.ImageUrl)
+                    ? DefaultImageUrl
+                    : command.ImageUrl
             };
 
             IdentityResult result = await userManager.CreateAsync(user, command.Password);

@@ -8,10 +8,13 @@ using Zn.Domain.Entity;
 namespace Zn.Application.Features.Categories.Delete
 {
     /// <summary>
-    /// <see cref="DeleteCategoryCommand"/>'ı işleyen Wolverine handler'ı.
-    /// Kategori yoksa NotFound (404). Blog → Category FK'sı Restrict olduğundan, bağlı blogu
-    /// olan bir kategorinin silinmesi DB seviyesinde patlardı; bunun yerine handler önceden
-    /// kontrol edip anlamlı bir Conflict (409) döndürür.
+    /// <see cref="DeleteCategoryCommand"/>'ı işleyen Wolverine handler'ı. Kategori yoksa NotFound (404).
+    /// <para>
+    /// Silme artık <b>soft delete</b>'tir: kayıt kalıcı silinmez, <see cref="Category.SoftDelete"/>
+    /// ile IsDeleted=true / DeletedAt set edilir. Bu nedenle Blog → Category Restrict FK kısıtı
+    /// tetiklenmez — bağlı blogu olan kategori de sorunsuz soft delete edilebilir (US-12). Eski
+    /// "bağlı blog varsa 409" ön kontrolü kaldırıldı.
+    /// </para>
     /// </summary>
     public static class DeleteCategoryCommandHandler
     {
@@ -26,15 +29,7 @@ namespace Zn.Application.Features.Categories.Delete
                 return Result.Failure(CategoryErrors.NotFound(command.Id));
             }
 
-            // Restrict FK: bağlı blog varsa DB ConstraintException atardı. Bunu kullanıcıya
-            // ham 500 yerine anlamlı 409 olarak döndürmek için önceden kontrol ediyoruz.
-            bool hasBlogs = await categoryRepository.HasBlogsAsync(command.Id, cancellationToken);
-            if (hasBlogs)
-            {
-                return Result.Failure(CategoryErrors.HasBlogs(command.Id));
-            }
-
-            categoryRepository.Remove(category);
+            category.SoftDelete();
             await categoryRepository.SaveChangesAsync(cancellationToken);
 
             return Result.Success();

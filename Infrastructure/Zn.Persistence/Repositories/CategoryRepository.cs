@@ -27,12 +27,22 @@ namespace Zn.Persistence.Repositories
 
         /// <inheritdoc />
         public async Task<IReadOnlyList<CategoryWithBlogCount>> GetAllWithBlogCountAsync(
+            bool includeDeleted,
             CancellationToken cancellationToken)
         {
             // Projeksiyon DB seviyesinde yapılır: Blogs koleksiyonu belleğe yüklenmez,
             // yalnızca COUNT(*) hesaplanır. Ada göre alfabetik sıralı döner.
-            return await _context.Categories
-                .AsNoTracking()
+            IQueryable<Category> query = _context.Categories.AsNoTracking();
+
+            // Admin/Manager sorgusu: soft delete edilmiş kategorileri de görmek için global
+            // query filter bypass edilir. Blog sayısı da filtresiz hesaplanır (silinmiş bloglar
+            // dahil) ki tutarlı bir admin görünümü sunulsun.
+            if (includeDeleted)
+            {
+                query = query.IgnoreQueryFilters();
+            }
+
+            return await query
                 .OrderBy(c => c.CategoryName)
                 .Select(c => new CategoryWithBlogCount(
                     c.Id,
@@ -97,12 +107,6 @@ namespace Zn.Persistence.Repositories
         public async Task AddAsync(Category category, CancellationToken cancellationToken)
         {
             await _context.Categories.AddAsync(category, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public void Remove(Category category)
-        {
-            _context.Categories.Remove(category);
         }
 
         /// <inheritdoc />

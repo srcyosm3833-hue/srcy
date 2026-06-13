@@ -55,6 +55,13 @@ namespace Zn.Domain.Entity
         public ICollection<SubComment> SubComments { get; private set; } = new List<SubComment>();
 
         /// <summary>
+        /// Navigation property: Yoruma yapılan beğeniler (1 Comment - N CommentLike). Beğeni sayısı
+        /// ve "mevcut kullanıcı beğendi mi" bilgisi okuma projeksiyonlarında bu koleksiyon
+        /// üzerinden DB seviyesinde (COUNT / EXISTS) hesaplanır; koleksiyon belleğe çekilmez.
+        /// </summary>
+        public ICollection<CommentLike> Likes { get; private set; } = new List<CommentLike>();
+
+        /// <summary>
         /// Geçerli bir Comment oluşturur. Yorum metni boş/whitespace olamaz ve azami uzunluğunu
         /// aşamaz; aksi halde <see cref="CommentDomainException"/> fırlatılır. Blog
         /// (<paramref name="blogId"/>) ve yazar (<paramref name="userId"/>) zorunludur.

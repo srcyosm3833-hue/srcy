@@ -31,9 +31,18 @@ namespace Zn.Persistence.Repositories
             int page,
             int pageSize,
             Guid? categoryId,
+            bool includeDeleted,
+            string? currentUserId,
             CancellationToken cancellationToken)
         {
             IQueryable<Blog> query = _context.Blogs.AsNoTracking();
+
+            // Admin/Manager sorgusu: soft delete edilmiş blogları da görmek için global query
+            // filter bypass edilir. Public sorguda (false) silinmiş bloglar zaten dışlanır.
+            if (includeDeleted)
+            {
+                query = query.IgnoreQueryFilters();
+            }
 
             if (categoryId.HasValue)
             {
@@ -56,14 +65,68 @@ namespace Zn.Persistence.Repositories
                     b.CategoryId,
                     b.Category.CategoryName,
                     b.User.FirstName + " " + b.User.LastName,
-                    b.CreatedAt))
+                    b.CreatedAt,
+                    // Beğeni sayısı ve "bu kullanıcı beğendi mi" DB seviyesinde (COUNT / EXISTS)
+                    // hesaplanır; like koleksiyonu belleğe çekilmez (N+1 yok).
+                    b.Likes.Count,
+                    currentUserId != null && b.Likes.Any(l => l.UserId == currentUserId)))
                 .ToListAsync(cancellationToken);
 
             return (items, totalCount);
         }
 
         /// <inheritdoc />
-        public async Task<BlogDetail?> GetDetailByIdAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<(IReadOnlyList<BlogListItem> Items, int TotalCount)> SearchAsync(
+            string q,
+            Guid? categoryId,
+            int page,
+            int pageSize,
+            string? currentUserId,
+            CancellationToken cancellationToken)
+        {
+            // Soft delete edilmiş bloglar global query filter ile zaten dışlanır (bypass YOK).
+            IQueryable<Blog> query = _context.Blogs.AsNoTracking();
+
+            if (categoryId.HasValue)
+            {
+                query = query.Where(b => b.CategoryId == categoryId.Value);
+            }
+
+            // LIKE deseni: terim başlık VEYA açıklamada herhangi bir yerde geçmeli (içeren eşleşme).
+            // EF.Functions.Like SQL tarafında çalışır; '%' wildcard'larını sarmalıyoruz.
+            string pattern = $"%{q}%";
+            query = query.Where(b =>
+                EF.Functions.Like(b.Title, pattern) ||
+                EF.Functions.Like(b.Description, pattern));
+
+            // Toplam sayı filtreye (kategori + arama) göre sayfalamadan önce hesaplanır.
+            int totalCount = await query.CountAsync(cancellationToken);
+
+            // En yeni bloglar önce. Projeksiyon DB seviyesinde: yalnızca liste için
+            // gereken kolonlar + yazar adı birleştirmesi SQL tarafında yapılır (GetPaged ile tutarlı).
+            List<BlogListItem> items = await query
+                .OrderByDescending(b => b.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(b => new BlogListItem(
+                    b.Id,
+                    b.Title,
+                    b.CoverImage,
+                    b.CategoryId,
+                    b.Category.CategoryName,
+                    b.User.FirstName + " " + b.User.LastName,
+                    b.CreatedAt,
+                    // Beğeni sayısı ve "bu kullanıcı beğendi mi" DB seviyesinde (COUNT / EXISTS)
+                    // hesaplanır; GetPaged ile tutarlı.
+                    b.Likes.Count,
+                    currentUserId != null && b.Likes.Any(l => l.UserId == currentUserId)))
+                .ToListAsync(cancellationToken);
+
+            return (items, totalCount);
+        }
+
+        /// <inheritdoc />
+        public async Task<BlogDetail?> GetDetailByIdAsync(Guid id, string? currentUserId, CancellationToken cancellationToken)
         {
             return await _context.Blogs
                 .AsNoTracking()
@@ -79,7 +142,10 @@ namespace Zn.Persistence.Repositories
                     b.UserId,
                     b.User.FirstName + " " + b.User.LastName,
                     b.CreatedAt,
-                    b.UpdatedAt))
+                    b.UpdatedAt,
+                    // Beğeni sayısı ve "bu kullanıcı beğendi mi" DB seviyesinde hesaplanır.
+                    b.Likes.Count,
+                    currentUserId != null && b.Likes.Any(l => l.UserId == currentUserId)))
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -103,12 +169,6 @@ namespace Zn.Persistence.Repositories
         public async Task AddAsync(Blog blog, CancellationToken cancellationToken)
         {
             await _context.Blogs.AddAsync(blog, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public void Remove(Blog blog)
-        {
-            _context.Blogs.Remove(blog);
         }
 
         /// <inheritdoc />

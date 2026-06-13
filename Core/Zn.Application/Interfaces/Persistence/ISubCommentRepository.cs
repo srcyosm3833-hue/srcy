@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Zn.Application.Features.SubComments.Common;
@@ -16,8 +17,20 @@ namespace Zn.Application.Interfaces.Persistence
     /// </summary>
     public interface ISubCommentRepository
     {
-        /// <summary>Verilen Id'ye sahip bir ana yorum var mı? Alt yorum ekleme öncesi doğrulama için.</summary>
+        /// <summary>Verilen Id'ye sahip bir ana yorum var mı? Alt yorum ekleme/listeleme öncesi doğrulama için.</summary>
         Task<bool> CommentExistsAsync(Guid commentId, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Bir ana yoruma ait alt yorumları createdAt azalan sıralı, sayfalanmış olarak ve toplam
+        /// sayısıyla birlikte döner. Yalnızca okuma amaçlıdır (AsNoTracking + DB seviyesinde
+        /// projeksiyon; yazar adı SQL tarafında birleştirilir).
+        /// </summary>
+        /// <returns>Geçerli sayfadaki liste öğeleri ve ana yoruma ait toplam alt yorum sayısı.</returns>
+        Task<(IReadOnlyList<SubCommentListItem> Items, int TotalCount)> GetPagedByCommentIdAsync(
+            Guid commentId,
+            int page,
+            int pageSize,
+            CancellationToken cancellationToken);
 
         /// <summary>
         /// Verilen Id'ye sahip alt yorumu bir liste öğesi projeksiyonu olarak döner (yazar adı

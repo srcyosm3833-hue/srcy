@@ -9,7 +9,10 @@ namespace Zn.Application.Features.Blogs.Delete
 {
     /// <summary>
     /// <see cref="DeleteBlogCommand"/>'ı işleyen Wolverine handler'ı. Blog yoksa NotFound (404);
-    /// istek sahibi yazar değil ve Admin değilse Forbidden (403). Yetki geçilirse blog silinir.
+    /// istek sahibi yazar değil ve Admin değilse Forbidden (403). Yetki geçilirse blog
+    /// <b>soft delete</b> edilir: kayıt kalıcı silinmez, <see cref="Blog.SoftDelete"/> ile
+    /// IsDeleted=true / DeletedAt set edilir ve global query filter sayesinde sonraki sorgularda
+    /// görünmez.
     /// </summary>
     public static class DeleteBlogCommandHandler
     {
@@ -31,7 +34,7 @@ namespace Zn.Application.Features.Blogs.Delete
                 return Result.Failure(BlogErrors.Forbidden());
             }
 
-            blogRepository.Remove(blog);
+            blog.SoftDelete();
             await blogRepository.SaveChangesAsync(cancellationToken);
 
             return Result.Success();

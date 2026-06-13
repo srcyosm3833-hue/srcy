@@ -22,11 +22,17 @@ namespace Zn.Application.Interfaces.Persistence
         /// Mesajları sayfalanmış olarak ve toplam sayısıyla birlikte döner. Sıralama DB tarafında:
         /// önce okunmamışlar (IsRead=false), ardından her grup içinde CreatedAt azalan. Yalnızca
         /// okuma amaçlıdır (AsNoTracking + DB seviyesinde projeksiyon).
+        /// <para>
+        /// <paramref name="includeDeleted"/> true ise soft delete edilmiş mesajlar da dahil edilir
+        /// (global query filter <c>IgnoreQueryFilters()</c> ile bypass edilir); yalnızca Admin/Manager
+        /// sorgularında kullanılmalıdır. Varsayılan (false) davranıştır.
+        /// </para>
         /// </summary>
         /// <returns>Geçerli sayfadaki liste öğeleri ve toplam mesaj sayısı.</returns>
         Task<(IReadOnlyList<MessageListItem> Items, int TotalCount)> GetPagedAsync(
             int page,
             int pageSize,
+            bool includeDeleted,
             CancellationToken cancellationToken);
 
         /// <summary>

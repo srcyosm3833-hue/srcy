@@ -39,7 +39,8 @@ namespace Zn.Application.Features.Comments.GetByBlogId
             };
 
             (IReadOnlyList<CommentListItem> items, int totalCount) =
-                await commentRepository.GetPagedByBlogIdAsync(query.BlogId, page, pageSize, cancellationToken);
+                await commentRepository.GetPagedByBlogIdAsync(
+                    query.BlogId, page, pageSize, query.CurrentUserId, cancellationToken);
 
             IReadOnlyList<CommentResponse> mapped = CommentMapper.ToResponseList(items);
 

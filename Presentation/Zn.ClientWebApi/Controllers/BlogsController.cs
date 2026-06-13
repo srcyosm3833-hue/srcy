@@ -11,18 +11,21 @@ using Zn.Application.Features.Blogs.Create;
 using Zn.Application.Features.Blogs.Delete;
 using Zn.Application.Features.Blogs.GetAll;
 using Zn.Application.Features.Blogs.GetById;
+using Zn.Application.Features.Blogs.Search;
+using Zn.Application.Features.Blogs.ToggleLike;
 using Zn.Application.Features.Blogs.Update;
+using Zn.Domain.Authorization;
 
 namespace Zn.ClientWebApi.Controllers
 {
     /// <summary>
     /// Blog uç noktaları. Okuma (GET) işlemleri herkese açıktır; yazma (POST/PUT/DELETE)
-    /// işlemleri kimlik doğrulama gerektirir ve "yazar veya Admin" yetki modeline tabidir.
+    /// işlemleri yalnızca Admin veya Manager rolündeki kullanıcılara açıktır (A6 yetki matrisi).
     /// <para>
-    /// Yazma işlemleri salt Admin'e değil, giriş yapmış her kullanıcıya (kendi blogları için)
-    /// açık olduğundan ayrı bir Admin controller'ı yerine bu controller'da metot seviyesinde
-    /// <c>[Authorize]</c> kullanılır. Yazar kimliği ve Admin rolü token'dan okunur — istek
-    /// gövdesinden ASLA alınmaz.
+    /// Yazma uçları metot seviyesinde <c>[Authorize(Roles = "Admin,Manager")]</c> ile korunur:
+    /// token yoksa 401, rol yetersizse 403. Yetki ayrımı handler'da incelenir — Admin herhangi
+    /// bir blogu, Manager (ve yazar) yalnızca kendi blogunu güncelleyebilir/silebilir. Yazar
+    /// kimliği ve Admin rolü token'dan okunur — istek gövdesinden ASLA alınmaz.
     /// </para>
     /// </summary>
     [Route("api/blogs")]
@@ -50,7 +53,30 @@ namespace Zn.ClientWebApi.Controllers
         {
             Result<PagedResult<BlogListItemResponse>> result =
                 await _messageBus.InvokeAsync<Result<PagedResult<BlogListItemResponse>>>(
-                    new GetBlogsQuery(page, pageSize, categoryId), cancellationToken);
+                    new GetBlogsQuery(page, pageSize, categoryId, GetUserId()), cancellationToken);
+
+            return HandleResult(result);
+        }
+
+        /// <summary>
+        /// Blogları serbest metin (<paramref name="q"/>) ile başlık/açıklamada arar; sayfalı
+        /// ve opsiyonel kategori filtreli döner. Herkese açıktır. Başarıda 200; arama terimi
+        /// boş/whitespace ise veya 200 karakteri aşarsa 400. Silinmiş bloglar sonuçta yer almaz.
+        /// </summary>
+        [HttpGet("search")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(PagedResult<BlogListItemResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Search(
+            [FromQuery] string q,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] Guid? categoryId = null,
+            CancellationToken cancellationToken = default)
+        {
+            Result<PagedResult<BlogListItemResponse>> result =
+                await _messageBus.InvokeAsync<Result<PagedResult<BlogListItemResponse>>>(
+                    new SearchBlogsQuery(q, page, pageSize, categoryId, GetUserId()), cancellationToken);
 
             return HandleResult(result);
         }
@@ -64,17 +90,17 @@ namespace Zn.ClientWebApi.Controllers
         {
             Result<BlogDetailResponse> result =
                 await _messageBus.InvokeAsync<Result<BlogDetailResponse>>(
-                    new GetBlogByIdQuery(id), cancellationToken);
+                    new GetBlogByIdQuery(id, GetUserId()), cancellationToken);
 
             return HandleResult(result);
         }
 
         /// <summary>
-        /// Yeni blog oluşturur. Giriş yapmış her kullanıcı yazar olabilir; yazar kimliği
-        /// token'dan alınır. Başarıda 201; kategori yoksa 400; token yoksa 401.
+        /// Yeni blog oluşturur. Yalnızca Admin veya Manager yazar olabilir; yazar kimliği
+        /// token'dan alınır. Başarıda 201; kategori yoksa 400; token yoksa 401; rol yetersizse 403.
         /// </summary>
         [HttpPost]
-        [Authorize]
+        [Authorize(Roles = $"{RoleNames.Admin},{RoleNames.Manager}")]
         [ProducesResponseType(typeof(BlogDetailResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -105,11 +131,12 @@ namespace Zn.ClientWebApi.Controllers
         }
 
         /// <summary>
-        /// Var olan blogu günceller. Yalnızca yazarı veya Admin yapabilir (aksi halde 403).
-        /// Bulunamazsa 404; kategori yoksa 400.
+        /// Var olan blogu günceller. Admin/Manager erişebilir; ayrıca handler'da yazar/Admin ayrımı
+        /// uygulanır: Admin tüm blogları, Manager (yazar olarak) yalnızca kendi blogunu güncelleyebilir
+        /// (aksi halde 403). Bulunamazsa 404; kategori yoksa 400.
         /// </summary>
         [HttpPut("{id:guid}")]
-        [Authorize]
+        [Authorize(Roles = $"{RoleNames.Admin},{RoleNames.Manager}")]
         [ProducesResponseType(typeof(BlogDetailResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -143,11 +170,12 @@ namespace Zn.ClientWebApi.Controllers
         }
 
         /// <summary>
-        /// Blogu siler. Yalnızca yazarı veya Admin yapabilir (aksi halde 403). Bulunamazsa 404.
-        /// Başarıda 204.
+        /// Blogu (soft) siler. Admin/Manager erişebilir; ayrıca handler'da yazar/Admin ayrımı
+        /// uygulanır: Admin tüm blogları, Manager (yazar olarak) yalnızca kendi blogunu silebilir
+        /// (aksi halde 403). Bulunamazsa 404. Başarıda 204.
         /// </summary>
         [HttpDelete("{id:guid}")]
-        [Authorize]
+        [Authorize(Roles = $"{RoleNames.Admin},{RoleNames.Manager}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -162,6 +190,33 @@ namespace Zn.ClientWebApi.Controllers
 
             Result result = await _messageBus.InvokeAsync<Result>(
                 new DeleteBlogCommand(id, userId, IsAdmin()), cancellationToken);
+
+            return HandleResult(result);
+        }
+
+        /// <summary>
+        /// Blogun beğenisini açıp kapatır (toggle). Giriş yapmış her kullanıcı kullanabilir; beğeniyi
+        /// yapan kullanıcı token'dan alınır (gövdeden ASLA). Mevcut beğeni varsa kaldırılır, yoksa
+        /// eklenir; işlem idempotenttir. Başarıda 200 + { liked, likeCount }; blog yoksa 404; token
+        /// yoksa 401.
+        /// </summary>
+        [HttpPost("{id:guid}/like")]
+        [Authorize]
+        [ProducesResponseType(typeof(BlogLikeToggleResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> ToggleLike(Guid id, CancellationToken cancellationToken)
+        {
+            // Beğeniyi yapan token'dan; gövdedeki hiçbir UserId alanı kabul edilmez.
+            string? userId = GetUserId();
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
+
+            Result<BlogLikeToggleResponse> result =
+                await _messageBus.InvokeAsync<Result<BlogLikeToggleResponse>>(
+                    new ToggleBlogLikeCommand(id, userId), cancellationToken);
 
             return HandleResult(result);
         }

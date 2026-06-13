@@ -150,9 +150,15 @@ namespace Zn.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -175,6 +181,24 @@ namespace Zn.Persistence.Migrations
                     b.ToTable("Blogs", (string)null);
                 });
 
+            modelBuilder.Entity("Zn.Domain.Entity.BlogLike", b =>
+                {
+                    b.Property<Guid>("BlogId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("BlogId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("BlogLikes", (string)null);
+                });
+
             modelBuilder.Entity("Zn.Domain.Entity.Category", b =>
                 {
                     b.Property<Guid>("Id")
@@ -188,6 +212,12 @@ namespace Zn.Persistence.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -231,6 +261,24 @@ namespace Zn.Persistence.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Comments", (string)null);
+                });
+
+            modelBuilder.Entity("Zn.Domain.Entity.CommentLike", b =>
+                {
+                    b.Property<Guid>("CommentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("CommentId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("CommentLikes", (string)null);
                 });
 
             modelBuilder.Entity("Zn.Domain.Entity.Contact", b =>
@@ -279,10 +327,16 @@ namespace Zn.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsRead")
                         .ValueGeneratedOnAdd()
@@ -461,6 +515,12 @@ namespace Zn.Persistence.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -477,6 +537,9 @@ namespace Zn.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -599,6 +662,25 @@ namespace Zn.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Zn.Domain.Entity.BlogLike", b =>
+                {
+                    b.HasOne("Zn.Domain.Entity.Blog", "Blog")
+                        .WithMany("Likes")
+                        .HasForeignKey("BlogId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Zn.Domain.Entity.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Blog");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Zn.Domain.Entity.Comment", b =>
                 {
                     b.HasOne("Zn.Domain.Entity.Blog", "Blog")
@@ -614,6 +696,25 @@ namespace Zn.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Blog");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Zn.Domain.Entity.CommentLike", b =>
+                {
+                    b.HasOne("Zn.Domain.Entity.Comment", "Comment")
+                        .WithMany("Likes")
+                        .HasForeignKey("CommentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Zn.Domain.Entity.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Comment");
 
                     b.Navigation("User");
                 });
@@ -651,6 +752,8 @@ namespace Zn.Persistence.Migrations
             modelBuilder.Entity("Zn.Domain.Entity.Blog", b =>
                 {
                     b.Navigation("Comments");
+
+                    b.Navigation("Likes");
                 });
 
             modelBuilder.Entity("Zn.Domain.Entity.Category", b =>
@@ -660,6 +763,8 @@ namespace Zn.Persistence.Migrations
 
             modelBuilder.Entity("Zn.Domain.Entity.Comment", b =>
                 {
+                    b.Navigation("Likes");
+
                     b.Navigation("SubComments");
                 });
 

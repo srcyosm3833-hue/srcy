@@ -4,10 +4,12 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Wolverine;
+using Zn.Application.Common.Pagination;
 using Zn.Application.Common.Results;
 using Zn.Application.Features.SubComments.Add;
 using Zn.Application.Features.SubComments.Common;
 using Zn.Application.Features.SubComments.Delete;
+using Zn.Application.Features.SubComments.GetByCommentId;
 using Zn.Application.Features.SubComments.Update;
 
 namespace Zn.ClientWebApi.Controllers
@@ -29,6 +31,27 @@ namespace Zn.ClientWebApi.Controllers
         public RepliesController(IMessageBus messageBus)
         {
             _messageBus = messageBus;
+        }
+
+        /// <summary>
+        /// Bir ana yoruma ait alt yorumları (yanıtları) sayfalı (createdAt azalan) döner. Herkese
+        /// açıktır. Ana yorum yoksa 404. pageSize üst sınırı handler'da uygulanır.
+        /// </summary>
+        [HttpGet]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(PagedResult<SubCommentResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetByCommentId(
+            Guid commentId,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            CancellationToken cancellationToken = default)
+        {
+            Result<PagedResult<SubCommentResponse>> result =
+                await _messageBus.InvokeAsync<Result<PagedResult<SubCommentResponse>>>(
+                    new GetRepliesByCommentIdQuery(commentId, page, pageSize), cancellationToken);
+
+            return HandleResult(result);
         }
 
         /// <summary>

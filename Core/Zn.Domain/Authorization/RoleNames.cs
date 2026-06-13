@@ -9,13 +9,20 @@ namespace Zn.Domain.Authorization
     /// </summary>
     public static class RoleNames
     {
-        /// <summary>Yönetici rolü: kategori/blog yönetimi gibi ayrıcalıklı işlemler.</summary>
+        /// <summary>Yönetici rolü: tüm içerik ve kullanıcı/rol yönetimi yetkisine sahip en üst seviye.</summary>
         public const string Admin = "Admin";
+
+        /// <summary>
+        /// İçerik yöneticisi rolü: kategori/blog/mesaj gibi içerik yönetimini Admin'den bağımsız
+        /// yürütebilir. Ancak kullanıcı güncelleme/silme ve rol atama yetkisi yoktur; başkasının
+        /// blog veya yorumunu silemez (yalnızca kendi içeriğini yönetir). Bkz. A6 yetki matrisi.
+        /// </summary>
+        public const string Manager = "Manager";
 
         /// <summary>Standart kayıtlı kullanıcı rolü.</summary>
         public const string User = "User";
 
         /// <summary>Uygulama açılışında seed edilecek tüm roller.</summary>
-        public static IReadOnlyList<string> All { get; } = new[] { Admin, User };
+        public static IReadOnlyList<string> All { get; } = new[] { Admin, Manager, User };
     }
 }

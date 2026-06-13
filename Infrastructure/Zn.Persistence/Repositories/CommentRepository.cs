@@ -32,6 +32,7 @@ namespace Zn.Persistence.Repositories
             Guid blogId,
             int page,
             int pageSize,
+            string? currentUserId,
             CancellationToken cancellationToken)
         {
             IQueryable<Comment> query = _context.Comments
@@ -53,7 +54,11 @@ namespace Zn.Persistence.Repositories
                     c.User.FirstName + " " + c.User.LastName,
                     c.CreatedAt,
                     c.UpdatedAt,
-                    c.SubComments.Count))
+                    c.SubComments.Count,
+                    // Beğeni sayısı ve "bu kullanıcı beğendi mi" DB seviyesinde (COUNT / EXISTS)
+                    // hesaplanır; like koleksiyonu belleğe çekilmez (N+1 yok).
+                    c.Likes.Count,
+                    currentUserId != null && c.Likes.Any(l => l.UserId == currentUserId)))
                 .ToListAsync(cancellationToken);
 
             return (items, totalCount);
@@ -68,7 +73,7 @@ namespace Zn.Persistence.Repositories
         }
 
         /// <inheritdoc />
-        public async Task<CommentListItem?> GetResponseByIdAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<CommentListItem?> GetResponseByIdAsync(Guid id, string? currentUserId, CancellationToken cancellationToken)
         {
             return await _context.Comments
                 .AsNoTracking()
@@ -80,7 +85,10 @@ namespace Zn.Persistence.Repositories
                     c.User.FirstName + " " + c.User.LastName,
                     c.CreatedAt,
                     c.UpdatedAt,
-                    c.SubComments.Count))
+                    c.SubComments.Count,
+                    // Beğeni sayısı ve "bu kullanıcı beğendi mi" DB seviyesinde hesaplanır.
+                    c.Likes.Count,
+                    currentUserId != null && c.Likes.Any(l => l.UserId == currentUserId)))
                 .FirstOrDefaultAsync(cancellationToken);
         }
 

@@ -19,8 +19,10 @@ namespace Zn.Application.Features.Categories.GetAll
             ICategoryRepository categoryRepository,
             CancellationToken cancellationToken)
         {
+            // Public liste: silinmiş kategoriler gösterilmez (includeDeleted=false). Admin'in
+            // silinmişleri görmesi için includeDeleted'i query'ye taşıyan dilim Özellik 5'te eklenir.
             IReadOnlyList<CategoryWithBlogCount> categories =
-                await categoryRepository.GetAllWithBlogCountAsync(cancellationToken);
+                await categoryRepository.GetAllWithBlogCountAsync(false, cancellationToken);
 
             IReadOnlyList<CategoryResponse> response = CategoryMapper.ToResponseList(categories);
 

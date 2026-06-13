@@ -24,6 +24,14 @@ namespace Zn.Application.Features.Auth.Common
         public static readonly Error AccountLocked =
             Error.Locked("Auth.AccountLocked", "The account is temporarily locked due to multiple failed login attempts. Please try again later.");
 
+        /// <summary>
+        /// Hesap soft delete edilmiş (devre dışı); giriş yapılamaz (401). Silinmiş kullanıcı global
+        /// query filter nedeniyle normal sorgularla bulunamaz; bu hata yalnızca login/refresh akışındaki
+        /// filtresiz soft-delete kontrolünden döner.
+        /// </summary>
+        public static readonly Error AccountDisabled =
+            Error.Unauthorized("Auth.AccountDisabled", "This account has been disabled.");
+
         /// <summary>Refresh token geçersiz, süresi dolmuş veya revoke edilmiş (401).</summary>
         public static readonly Error InvalidRefreshToken =
             Error.Unauthorized("Auth.InvalidRefreshToken", "The refresh token is invalid, expired or revoked.");

@@ -17,7 +17,8 @@ namespace Zn.Application.Features.Blogs.GetById
             IBlogRepository blogRepository,
             CancellationToken cancellationToken)
         {
-            BlogDetail? blog = await blogRepository.GetDetailByIdAsync(query.Id, cancellationToken);
+            BlogDetail? blog =
+                await blogRepository.GetDetailByIdAsync(query.Id, query.CurrentUserId, cancellationToken);
 
             if (blog is null)
             {
