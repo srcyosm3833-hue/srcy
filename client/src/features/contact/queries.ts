@@ -4,6 +4,7 @@ import { contactApi, socialMediaApi } from '@/lib/api'
 import type {
   CreateSocialMediaRequest,
   UpdateSocialMediaRequest,
+  UpsertContactRequest,
 } from '@/types'
 
 /** Iletisim ve sosyal medya server-state hook'lari. */
@@ -34,6 +35,20 @@ export function useContact() {
         return false
       }
       return failureCount < 2
+    },
+  })
+}
+
+/**
+ * Iletisim bilgisini olusturur/gunceller (admin upsert). Basarida tekil iletisim
+ * sorgusunu tazeler (404'tan donmusse de yeni veriyle yenilenir).
+ */
+export function useUpsertContact() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: UpsertContactRequest) => contactApi.update(payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: contactKeys.all })
     },
   })
 }

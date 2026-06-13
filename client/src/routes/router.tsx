@@ -33,6 +33,7 @@ const AdminCategoriesPage = lazy(
 )
 const AdminCommentsPage = lazy(() => import('@/pages/admin/AdminCommentsPage'))
 const AdminMessagesPage = lazy(() => import('@/pages/admin/AdminMessagesPage'))
+const AdminContactPage = lazy(() => import('@/pages/admin/AdminContactPage'))
 const AdminSocialMediaPage = lazy(
   () => import('@/pages/admin/AdminSocialMediaPage'),
 )
@@ -66,6 +67,7 @@ export const router = createBrowserRouter([
           { path: paths.adminCategories, element: <AdminCategoriesPage /> },
           { path: paths.adminComments, element: <AdminCommentsPage /> },
           { path: paths.adminMessages, element: <AdminMessagesPage /> },
+          { path: paths.adminContact, element: <AdminContactPage /> },
           { path: paths.adminSocialMedia, element: <AdminSocialMediaPage /> },
         ],
       },

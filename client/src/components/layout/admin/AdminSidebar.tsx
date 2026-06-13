@@ -5,6 +5,7 @@ import {
   LogOut,
   Mail,
   MessageSquare,
+  Phone,
   Share2,
   Tag,
 } from 'lucide-react'
@@ -43,6 +44,13 @@ const navItems: AdminNavItem[] = [
     adminOnly: true,
   },
   { to: paths.adminMessages, label: 'Mesajlar', icon: Mail },
+  // Iletisim guncelleme (PUT /api/admin/contact) yalniz Admin -> adminOnly.
+  {
+    to: paths.adminContact,
+    label: 'İletişim',
+    icon: Phone,
+    adminOnly: true,
+  },
   { to: paths.adminSocialMedia, label: 'Sosyal Medya', icon: Share2 },
 ]
 

@@ -20,5 +20,6 @@ export const paths = {
   adminCategories: '/admin/categories',
   adminComments: '/admin/comments',
   adminMessages: '/admin/messages',
+  adminContact: '/admin/contact',
   adminSocialMedia: '/admin/social-media',
 } as const

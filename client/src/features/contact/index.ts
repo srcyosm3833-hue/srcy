@@ -3,6 +3,7 @@ export {
   contactKeys,
   socialMediaKeys,
   useContact,
+  useUpsertContact,
   useSocialMedia,
   useCreateSocialMedia,
   useUpdateSocialMedia,
