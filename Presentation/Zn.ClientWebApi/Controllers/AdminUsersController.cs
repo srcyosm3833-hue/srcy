@@ -5,10 +5,12 @@ using Microsoft.AspNetCore.Mvc;
 using Wolverine;
 using Zn.Application.Common.Pagination;
 using Zn.Application.Common.Results;
+using Zn.Application.Features.Users.AssignRole;
 using Zn.Application.Features.Users.CreateUser;
 using Zn.Application.Features.Users.Common;
 using Zn.Application.Features.Users.GetUserById;
 using Zn.Application.Features.Users.GetUsers;
+using Zn.Application.Features.Users.RemoveRole;
 using Zn.Application.Features.Users.SoftDeleteUser;
 using Zn.Application.Features.Users.UpdateUser;
 using Zn.Domain.Authorization;
@@ -149,6 +151,55 @@ namespace Zn.ClientWebApi.Controllers
         }
 
         /// <summary>
+        /// Kullanıcıya rol atar (yalnızca Admin — A6). Kullanıcı yoksa 404; rol yoksa 404; kullanıcı
+        /// zaten bu roldeyse idempotent 200. Başarıda kullanıcının güncel temsili (rolleriyle) döner.
+        /// Rol adı gövdeden alınır.
+        /// </summary>
+        [HttpPost("{id}/roles")]
+        [Authorize(Roles = RoleNames.Admin)]
+        [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> AssignRole(
+            string id,
+            [FromBody] AssignRoleRequest request,
+            CancellationToken cancellationToken)
+        {
+            var command = new AssignRoleCommand(id, request.RoleName);
+
+            Result<UserResponse> result =
+                await _messageBus.InvokeAsync<Result<UserResponse>>(command, cancellationToken);
+
+            return HandleResult(result);
+        }
+
+        /// <summary>
+        /// Kullanıcıdan rol kaldırır (yalnızca Admin — A6). Kullanıcı yoksa 404; rol yoksa 404; sistemdeki
+        /// son Admin'den Admin rolü kaldırılmak istenirse 400. Başarıda 204. Rol adı route'tan alınır.
+        /// </summary>
+        [HttpDelete("{id}/roles/{roleName}")]
+        [Authorize(Roles = RoleNames.Admin)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> RemoveRole(
+            string id,
+            string roleName,
+            CancellationToken cancellationToken)
+        {
+            var command = new RemoveRoleCommand(id, roleName);
+
+            Result result =
+                await _messageBus.InvokeAsync<Result>(command, cancellationToken);
+
+            return HandleResult(result);
+        }
+
+        /// <summary>
         /// PUT gövdesi: kullanıcının güncellenebilir profil alanları. Id route'tan geldiği için
         /// gövdede tekrar edilmez. E-posta ve rol bu kapsamda değildir.
         /// </summary>
@@ -156,5 +207,12 @@ namespace Zn.ClientWebApi.Controllers
         /// <param name="LastName">Kullanıcının yeni soyadı.</param>
         /// <param name="ImageUrl">Profil görseli URL'i (boş bırakılırsa varsayılan avatar atanır).</param>
         public sealed record UpdateUserRequest(string FirstName, string LastName, string? ImageUrl);
+
+        /// <summary>
+        /// POST gövdesi (rol atama): atanacak rolün adı. Kullanıcı id'si route'tan geldiği için
+        /// gövdede tekrar edilmez.
+        /// </summary>
+        /// <param name="RoleName">Kullanıcıya atanacak rolün adı.</param>
+        public sealed record AssignRoleRequest(string RoleName);
     }
 }

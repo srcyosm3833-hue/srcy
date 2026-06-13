@@ -32,6 +32,10 @@ builder.Host.UseWolverine(opts =>
     opts.CodeGeneration.AlwaysUseServiceLocationFor<UserManager<User>>();
     opts.CodeGeneration.AlwaysUseServiceLocationFor<SignInManager<User>>();
 
+    // RoleManager<Role> de aynı şekilde opaque lambda factory ile kayıtlıdır (rol CRUD ve rol
+    // atama/kaldırma handler'ları kullanır). Allow-list'e eklenmezse codegen runtime'da patlar.
+    opts.CodeGeneration.AlwaysUseServiceLocationFor<RoleManager<Role>>();
+
     // EF Core'un DbContextOptions'ı da opaque lambda factory ile kayıtlıdır ve
     // repository → DbContext zinciri üzerinden handler bağımlılıklarına sızar.
     // DbContext'i service location köküne alarak tüm zinciri tek noktada çözeriz.

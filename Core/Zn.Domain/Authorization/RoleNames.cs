@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Zn.Domain.Authorization
 {
@@ -24,5 +26,13 @@ namespace Zn.Domain.Authorization
 
         /// <summary>Uygulama açılışında seed edilecek tüm roller.</summary>
         public static IReadOnlyList<string> All { get; } = new[] { Admin, Manager, User };
+
+        /// <summary>
+        /// Verilen rol adının sistem tarafından korunan bir rol (Admin/Manager/User) olup olmadığını döner.
+        /// Korumalı roller yeniden adlandırılamaz ve silinemez; karşılaştırma büyük/küçük harf duyarsızdır.
+        /// </summary>
+        public static bool IsProtected(string roleName) =>
+            !string.IsNullOrWhiteSpace(roleName)
+            && All.Any(name => string.Equals(name, roleName, StringComparison.OrdinalIgnoreCase));
     }
 }
