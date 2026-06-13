@@ -1,10 +1,227 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
 
-/* Tailwind v4: yapilandirma CSS-first'tur. Tema degiskenleri ileride buraya
-   @theme blogu ile eklenebilir. Su an iskelet asamasinda varsayilanlar yeterli. */
+/* Yazi tipleri (self-host @fontsource). Inter = govde, Playfair Display = baslik. */
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/playfair-display/600.css';
+@import '@fontsource/playfair-display/700.css';
 
-html,
-body,
-#root {
-  min-height: 100vh;
+/* Class tabanli dark mode: <html class="dark"> ise dark token'lari devreye girer.
+   Tailwind v4'te `dark:` varyantini bu custom-variant tanimlar. */
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Tasarim token'lari (docs/FRONTEND-DESIGN.md).
+ * Marka: Slate-700 primary (#1e293b), Amber-500 accent (#f59e0b).
+ * Degerler HSL kanallari olarak tutulur; @theme icinde hsl() ile sarmalanir.
+ */
+:root {
+  /* Zemin ve on plan */
+  --background: 0 0% 100%; /* #ffffff */
+  --foreground: 222 47% 11%; /* #0f172a — slate-900 */
+
+  /* Kart / yukseltilmis yuzey */
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+
+  /* Popover */
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+
+  /* Birincil — Slate 700 */
+  --primary: 217 33% 17%; /* #1e293b */
+  --primary-foreground: 210 40% 98%; /* #f8fafc */
+
+  /* Ikincil — Slate 100 */
+  --secondary: 210 40% 96%; /* #f1f5f9 */
+  --secondary-foreground: 222 47% 11%;
+
+  /* Soluk / yardimci metin */
+  --muted: 210 40% 96%; /* #f1f5f9 */
+  --muted-foreground: 215 16% 47%; /* #64748b — slate-500 */
+
+  /* Vurgu — Amber 500 */
+  --accent: 43 96% 56%; /* #f59e0b */
+  --accent-foreground: 222 47% 11%;
+
+  /* Hata/tehlike */
+  --destructive: 0 84% 60%; /* #ef4444 */
+  --destructive-foreground: 0 0% 98%;
+
+  /* Kenarlik / input / ring */
+  --border: 214 32% 91%; /* #e2e8f0 — slate-200 */
+  --input: 214 32% 91%;
+  --ring: 217 33% 17%; /* primary ile ayni */
+
+  /* Kose yaricapi */
+  --radius: 0.5rem; /* 8px */
+
+  /* Blog-specific: one cikan icerik seridi */
+  --featured: 43 96% 56%; /* amber-500 */
+  --featured-foreground: 222 47% 11%;
+
+  /* Sidebar (admin) */
+  --sidebar-background: 222 47% 11%; /* slate-900 */
+  --sidebar-foreground: 210 40% 98%; /* slate-50 */
+  --sidebar-border: 217 33% 17%; /* slate-800 */
+  --sidebar-accent: 217 19% 27%; /* slate-700 */
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-ring: 43 96% 56%; /* amber vurgu */
+}
+
+.dark {
+  --background: 222 47% 11%; /* #0f172a */
+  --foreground: 210 40% 98%; /* #f8fafc */
+
+  --card: 217 33% 17%; /* #1e293b */
+  --card-foreground: 210 40% 98%;
+
+  --popover: 217 33% 17%;
+  --popover-foreground: 210 40% 98%;
+
+  --primary: 210 40% 98%; /* light'ta dark olan; dark'ta acik */
+  --primary-foreground: 222 47% 11%;
+
+  --secondary: 217 19% 27%; /* #334155 — slate-700 */
+  --secondary-foreground: 210 40% 98%;
+
+  --muted: 217 19% 27%;
+  --muted-foreground: 215 20% 65%; /* #94a3b8 — slate-400 */
+
+  --accent: 43 96% 56%; /* amber korunur */
+  --accent-foreground: 222 47% 11%;
+
+  --destructive: 0 63% 31%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 217 19% 27%;
+  --input: 217 19% 27%;
+  --ring: 210 40% 98%;
+
+  --featured: 43 96% 56%;
+  --featured-foreground: 222 47% 11%;
+
+  --sidebar-background: 215 28% 9%; /* slate-950 */
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-border: 222 47% 11%;
+  --sidebar-accent: 217 33% 17%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-ring: 43 96% 56%;
+}
+
+/*
+ * @theme inline: yukaridaki CSS degiskenlerini Tailwind'in utility renk
+ * sistemine baglar. Boylece `bg-background`, `text-primary`, `border-border`
+ * gibi siniflar token'lardan turetilir. `inline` = degerler runtime'da
+ * :root/.dark'tan okunur (dark mode otomatik calisir).
+ */
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-featured: hsl(var(--featured));
+  --color-featured-foreground: hsl(var(--featured-foreground));
+
+  --color-sidebar: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  /* Kose yaricap olcegi (shadcn standardi) */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Yazi tipi aileleri */
+  --font-sans:
+    'Inter', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100vh;
+  }
+
+  /* Baslik elemanlari serif (Playfair) — gerektiginde font-sans ile ezilebilir. */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-heading);
+  }
+
+  /* Hareket azaltma tercihi: animasyon/ge%cisleri en aza indir (a11y). */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  /*
+   * Blog detay metni icin okunabilirlik odakli tipografi (docs 1.2).
+   * Kullanimi sonraki dilimde (BlogDetailPage) — tanim simdiden hazir.
+   */
+  .prose-blog {
+    font-family: var(--font-body);
+    font-size: 1.0625rem; /* 17px */
+    line-height: 1.875;
+    color: hsl(var(--foreground));
+    max-width: 68ch;
+  }
+
+  .prose-blog p + p {
+    margin-top: 1.25em;
+  }
 }

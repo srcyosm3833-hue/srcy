@@ -20,8 +20,14 @@ export type {
   CreateBlogRequest,
   UpdateBlogRequest,
   BlogListQuery,
+  BlogLikeToggleResponse,
+  BlogSearchQuery,
 } from './blog'
-export type { Category } from './category'
+export type {
+  Category,
+  CreateCategoryRequest,
+  UpdateCategoryRequest,
+} from './category'
 export type {
   Comment,
   SubComment,

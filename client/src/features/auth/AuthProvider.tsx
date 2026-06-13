@@ -88,18 +88,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const value = useMemo<AuthContextValue>(
-    () => ({
+  const value = useMemo<AuthContextValue>(() => {
+    const isAdmin = user?.roles.includes('Admin') ?? false
+    const isManager = user?.roles.includes('Manager') ?? false
+
+    return {
       user,
       isAuthenticated: user !== null,
-      isAdmin: user?.roles.includes('Admin') ?? false,
+      isAdmin,
+      isManager,
+      isAdminOrManager: isAdmin || isManager,
       isInitializing,
       login,
       register,
       logout,
-    }),
-    [user, isInitializing, login, register, logout],
-  )
+    }
+  }, [user, isInitializing, login, register, logout])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

@@ -27,4 +27,13 @@ export default defineConfig([
       'react-refresh/only-export-components': 'off',
     },
   },
+  {
+    // shadcn/ui komponentleri tasarim geregi komponentle birlikte variant/yardimci
+    // (orn. buttonVariants, useFormField) export eder. Bu dosyalar elle duzenlenmez;
+    // react-refresh "yalniz komponent export" kuralini burada kapatiyoruz (shadcn standardi).
+    files: ['src/components/ui/**/*.{ts,tsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])

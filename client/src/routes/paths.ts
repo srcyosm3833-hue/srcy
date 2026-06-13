@@ -9,5 +9,15 @@ export const paths = {
   blogs: '/blogs',
   /** Tek blog detayi yolu uretici. */
   blogDetail: (id: string | number = ':id') => `/blogs/${id}`,
+  contact: '/contact',
+
+  // --- Admin alani ---
   admin: '/admin',
+  adminBlogs: '/admin/blogs',
+  adminBlogCreate: '/admin/blogs/create',
+  /** Blog duzenleme yolu uretici. */
+  adminBlogEdit: (id: string | number = ':id') => `/admin/blogs/${id}/edit`,
+  adminCategories: '/admin/categories',
+  adminMessages: '/admin/messages',
+  adminSocialMedia: '/admin/social-media',
 } as const

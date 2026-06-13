@@ -17,6 +17,10 @@ export interface BlogListItem {
   authorName: string
   /** ISO 8601 UTC olusturulma ani. */
   createdAt: string
+  /** Blogun toplam begeni sayisi. */
+  likeCount: number
+  /** Istegi yapan kullanici bu blogu begenmis mi (anonimde false). */
+  isLikedByCurrentUser: boolean
 }
 
 /** Tek blogun tam detayi (agir alanlar dahil). */
@@ -35,6 +39,27 @@ export interface BlogDetail {
   createdAt: string
   /** Hic guncellenmediyse null. */
   updatedAt: string | null
+  /** Blogun toplam begeni sayisi. */
+  likeCount: number
+  /** Istegi yapan kullanici bu blogu begenmis mi (anonimde false). */
+  isLikedByCurrentUser: boolean
+}
+
+/** POST /api/blogs/{id}/like yaniti (toggle sonucu). */
+export interface BlogLikeToggleResponse {
+  /** Islem sonunda blog begenili mi (true = like eklendi, false = kaldirildi). */
+  liked: boolean
+  /** Islem sonrasi toplam begeni sayisi. */
+  likeCount: number
+}
+
+/** GET /api/blogs/search sorgu parametreleri. */
+export interface BlogSearchQuery {
+  /** Arama terimi (bos/whitespace gonderme; backend 400 doner). */
+  q: string
+  page?: number
+  pageSize?: number
+  categoryId?: string
 }
 
 /** POST /api/blogs govdesi (yazar token'dan alinir, govdede UserId yoktur). */

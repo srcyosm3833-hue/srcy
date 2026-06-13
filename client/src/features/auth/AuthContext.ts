@@ -17,6 +17,10 @@ export interface AuthContextValue {
   isAuthenticated: boolean
   /** Kullanici Admin rolunde mi (korumali admin route'lari icin). */
   isAdmin: boolean
+  /** Kullanici Manager rolunde mi (icerik yonetimi yetkisi). */
+  isManager: boolean
+  /** Kullanici Admin veya Manager rolunde mi (icerik yonetimi alanlari icin ortak kontrol). */
+  isAdminOrManager: boolean
   /** Ilk yuklemede /api/me cozulurken true (uygulama acilis kontrolu). */
   isInitializing: boolean
   /** Giris yap: token'lari saklar ve kullaniciyi yukler. */
