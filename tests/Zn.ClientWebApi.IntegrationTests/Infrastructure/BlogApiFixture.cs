@@ -32,6 +32,9 @@ namespace Zn.ClientWebApi.IntegrationTests.Infrastructure
         private string? _adminAccessToken;
         private readonly object _adminTokenLock = new();
 
+        // Cached manager access token; lazy-initialized by CreateManagerClientAsync().
+        private string? _managerAccessToken;
+
         public HttpClient CreateClient() =>
             Factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
             {
@@ -103,6 +106,75 @@ namespace Zn.ClientWebApi.IntegrationTests.Infrastructure
             return (userClient, userId, accessToken);
         }
 
+        /// <summary>
+        /// Creates a new Manager-role user and returns an HttpClient bearing that user's token.
+        /// The Manager role is created in the test DB if it does not exist yet.
+        /// A single manager identity is cached for the lifetime of the fixture.
+        /// </summary>
+        public async Task<HttpClient> CreateManagerClientAsync(string prefix = "manager")
+        {
+            if (_managerAccessToken is not null)
+            {
+                HttpClient cached = CreateClient();
+                cached.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", _managerAccessToken);
+                return cached;
+            }
+
+            // Create the Manager role if it doesn't exist, then create a user in that role.
+            using IServiceScope scope = Factory.Services.CreateScope();
+            IServiceProvider provider = scope.ServiceProvider;
+            var roleManager = provider.GetRequiredService<RoleManager<Role>>();
+            var userManager = provider.GetRequiredService<UserManager<User>>();
+
+            if (!await roleManager.RoleExistsAsync(RoleNames.Manager))
+            {
+                await roleManager.CreateAsync(new Role { Name = RoleNames.Manager });
+            }
+
+            string email = UniqueEmail(prefix);
+            const string password = "Manager@1234";
+            var managerUser = new User
+            {
+                UserName = email,
+                Email = email,
+                EmailConfirmed = true,
+                FirstName = "Test",
+                LastName = "Manager",
+                ImageUrl = "https://www.gravatar.com/avatar/?d=mp"
+            };
+
+            IdentityResult createResult = await userManager.CreateAsync(managerUser, password);
+            if (!createResult.Succeeded)
+            {
+                var msgs = new System.Collections.Generic.List<string>();
+                foreach (var err in createResult.Errors) msgs.Add(err.Description);
+                throw new InvalidOperationException(
+                    "Failed to create manager user: " + string.Join("; ", msgs));
+            }
+
+            await userManager.AddToRoleAsync(managerUser, RoleNames.Manager);
+
+            // Login to get token
+            HttpClient anon = CreateClient();
+            HttpResponseMessage login = await anon.PostAsJsonAsync("/api/auth/login",
+                new { Email = email, Password = password }, JsonOptions);
+
+            if (!login.IsSuccessStatusCode)
+            {
+                throw new InvalidOperationException(
+                    $"Manager login failed ({login.StatusCode})");
+            }
+
+            var tokens = await login.Content.ReadFromJsonAsync<TokenPairDto>(JsonOptions);
+            _managerAccessToken = tokens!.AccessToken;
+
+            HttpClient client = CreateClient();
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", _managerAccessToken);
+            return client;
+        }
+
         public async Task InitializeAsync()
         {
             await Factory.InitializeAsync();
@@ -148,10 +220,13 @@ namespace Zn.ClientWebApi.IntegrationTests.Infrastructure
             var roleManager = provider.GetRequiredService<RoleManager<Role>>();
             var userManager = provider.GetRequiredService<UserManager<User>>();
 
-            // Ensure the Admin role exists
-            if (!await roleManager.RoleExistsAsync(RoleNames.Admin))
+            // Ensure all application roles exist (Admin, Manager, User)
+            foreach (string roleName in RoleNames.All)
             {
-                await roleManager.CreateAsync(new Role { Name = RoleNames.Admin });
+                if (!await roleManager.RoleExistsAsync(roleName))
+                {
+                    await roleManager.CreateAsync(new Role { Name = roleName });
+                }
             }
 
             // Ensure the admin user exists

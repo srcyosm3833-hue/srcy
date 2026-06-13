@@ -238,5 +238,111 @@ namespace Zn.ClientWebApi.IntegrationTests.Infrastructure
             client.PatchAsJsonAsync($"/api/admin/messages/{messageId}",
                 new { IsRead = isRead }, JsonOpts);
 
+        // ---- Admin Users (Faz 5) ----
+
+        public static Task<HttpResponseMessage> GetAdminUsersAsync(
+            this HttpClient client, int page = 1, int pageSize = 20, bool includeDeleted = false)
+        {
+            string url = $"/api/admin/users?page={page}&pageSize={pageSize}&includeDeleted={includeDeleted}";
+            return client.GetAsync(url);
+        }
+
+        public static Task<HttpResponseMessage> GetAdminUserByIdAsync(
+            this HttpClient client, string userId) =>
+            client.GetAsync($"/api/admin/users/{userId}");
+
+        public static Task<HttpResponseMessage> CreateAdminUserAsync(
+            this HttpClient client,
+            string firstName,
+            string lastName,
+            string email,
+            string password,
+            string? imageUrl = null) =>
+            client.PostAsJsonAsync("/api/admin/users", new
+            {
+                FirstName = firstName,
+                LastName = lastName,
+                Email = email,
+                Password = password,
+                ImageUrl = imageUrl
+            }, JsonOpts);
+
+        public static Task<HttpResponseMessage> UpdateAdminUserAsync(
+            this HttpClient client,
+            string userId,
+            string firstName,
+            string lastName,
+            string? imageUrl = null) =>
+            client.PutAsJsonAsync($"/api/admin/users/{userId}", new
+            {
+                FirstName = firstName,
+                LastName = lastName,
+                ImageUrl = imageUrl
+            }, JsonOpts);
+
+        public static Task<HttpResponseMessage> DeleteAdminUserAsync(
+            this HttpClient client, string userId) =>
+            client.DeleteAsync($"/api/admin/users/{userId}");
+
+        // ---- Blog Search (Faz 5) ----
+
+        public static Task<HttpResponseMessage> SearchBlogsAsync(
+            this HttpClient client,
+            string q,
+            int page = 1,
+            int pageSize = 10,
+            Guid? categoryId = null)
+        {
+            string url = $"/api/blogs/search?q={Uri.EscapeDataString(q)}&page={page}&pageSize={pageSize}";
+            if (categoryId.HasValue)
+            {
+                url += $"&categoryId={categoryId.Value}";
+            }
+            return client.GetAsync(url);
+        }
+
+        /// <summary>
+        /// Creates an admin user via POST /api/admin/users and returns the new user's Id.
+        /// Throws if the creation fails.
+        /// </summary>
+        public static async Task<string> ArrangeCreateAdminUserAsync(
+            this HttpClient adminClient,
+            string firstName,
+            string lastName,
+            string email,
+            string password = "Valid@1234",
+            string? imageUrl = null)
+        {
+            HttpResponseMessage response = await adminClient.CreateAdminUserAsync(
+                firstName, lastName, email, password, imageUrl);
+            string body = await response.Content.ReadAsStringAsync();
+            if ((int)response.StatusCode != 201)
+            {
+                throw new InvalidOperationException(
+                    $"Admin user creation failed ({response.StatusCode}): {body}");
+            }
+
+            JsonDocument doc = JsonDocument.Parse(body);
+            return doc.RootElement.GetProperty("id").GetString()!;
+        }
+
+        // ---- Blog Like (Faz 5 - A9) ----
+
+        /// <summary>
+        /// Toggles a blog like via POST /api/blogs/{id}/like.
+        /// Requires an authenticated client (returns 401 for anonymous).
+        /// </summary>
+        public static Task<HttpResponseMessage> ToggleBlogLikeAsync(this HttpClient client, Guid blogId) =>
+            client.PostAsync($"/api/blogs/{blogId}/like", null);
+
+        // ---- Comment Like (Faz 5 - A10) ----
+
+        /// <summary>
+        /// Toggles a comment like via POST /api/comments/{id}/like.
+        /// Requires an authenticated client (returns 401 for anonymous).
+        /// </summary>
+        public static Task<HttpResponseMessage> ToggleCommentLikeAsync(this HttpClient client, Guid commentId) =>
+            client.PostAsync($"/api/comments/{commentId}/like", null);
+
     }
 }

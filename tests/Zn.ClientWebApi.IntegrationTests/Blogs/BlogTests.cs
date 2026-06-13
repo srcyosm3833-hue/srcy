@@ -46,11 +46,12 @@ namespace Zn.ClientWebApi.IntegrationTests.Blogs
         public async Task GetBlogs_Returns200WithCorrectPagedResultShape()
         {
             // Arrange — create category + blog so list is non-trivially populated
+            // Faz 5: POST /api/blogs requires Admin or Manager role.
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-Shape-{Guid.NewGuid():N}");
 
-            (HttpClient authorClient, _, _) = await _fixture.CreateUserClientAsync("shape-author");
-            await authorClient.ArrangeCreateBlogAsync($"Shape Blog {Guid.NewGuid():N}", "Desc", catId);
+            using HttpClient managerClient = await _fixture.CreateManagerClientAsync("shape-manager");
+            await managerClient.ArrangeCreateBlogAsync($"Shape Blog {Guid.NewGuid():N}", "Desc", catId);
 
             // Act
             using HttpClient anonClient = _fixture.CreateClient();
@@ -102,15 +103,16 @@ namespace Zn.ClientWebApi.IntegrationTests.Blogs
         public async Task GetBlogs_CategoryIdFilter_ReturnsOnlyThatCategorysBlogs()
         {
             // Arrange — two categories, one blog each
+            // Faz 5: POST /api/blogs now requires Admin or Manager role.
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catA = await adminClient.ArrangeCreateCategoryAsync($"Cat-FilterA-{Guid.NewGuid():N}");
             Guid catB = await adminClient.ArrangeCreateCategoryAsync($"Cat-FilterB-{Guid.NewGuid():N}");
 
-            (HttpClient authorClient, _, _) = await _fixture.CreateUserClientAsync("filter-author");
+            using HttpClient managerClient = await _fixture.CreateManagerClientAsync("filter-manager");
             string titleInA = $"BlogInA-{Guid.NewGuid():N}";
             string titleInB = $"BlogInB-{Guid.NewGuid():N}";
-            await authorClient.ArrangeCreateBlogAsync(titleInA, "Desc A", catA);
-            await authorClient.ArrangeCreateBlogAsync(titleInB, "Desc B", catB);
+            await managerClient.ArrangeCreateBlogAsync(titleInA, "Desc A", catA);
+            await managerClient.ArrangeCreateBlogAsync(titleInB, "Desc B", catB);
 
             // Act — filter by catA only
             using HttpClient anonClient = _fixture.CreateClient();
@@ -147,10 +149,16 @@ namespace Zn.ClientWebApi.IntegrationTests.Blogs
         public async Task GetBlogById_ExistingId_Returns200WithAllDetailFields()
         {
             // Arrange
+            // Faz 5: POST /api/blogs now requires Admin or Manager role.
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-Detail-{Guid.NewGuid():N}");
 
-            (HttpClient authorClient, string authorUserId, _) = await _fixture.CreateUserClientAsync("detail-author");
+            using HttpClient authorClient = await _fixture.CreateManagerClientAsync("detail-manager");
+            // Get the manager's userId from /api/me
+            HttpResponseMessage meResp = await authorClient.GetAsync("/api/me");
+            meResp.EnsureSuccessStatusCode();
+            JsonDocument meDoc = JsonDocument.Parse(await meResp.Content.ReadAsStringAsync());
+            string authorUserId = meDoc.RootElement.GetProperty("id").GetString()!;
             Guid blogId = await authorClient.ArrangeCreateBlogAsync($"Detail Blog {Guid.NewGuid():N}", "Detail desc", catId);
 
             // Act
@@ -201,10 +209,16 @@ namespace Zn.ClientWebApi.IntegrationTests.Blogs
         public async Task CreateBlog_AuthenticatedUser_Returns201WithTokenUserAsAuthor()
         {
             // Arrange
+            // Faz 5: POST /api/blogs now requires Admin or Manager role.
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-Create13a-{Guid.NewGuid():N}");
 
-            (HttpClient authorClient, string authorUserId, _) = await _fixture.CreateUserClientAsync("create-author");
+            // Manager role is required to create blogs (Faz 5 A6 permission matrix).
+            using HttpClient authorClient = await _fixture.CreateManagerClientAsync("create-manager");
+            HttpResponseMessage meResp = await authorClient.GetAsync("/api/me");
+            meResp.EnsureSuccessStatusCode();
+            JsonDocument meDoc = JsonDocument.Parse(await meResp.Content.ReadAsStringAsync());
+            string authorUserId = meDoc.RootElement.GetProperty("id").GetString()!;
 
             // Act — body has no UserId field; controller must use token
             HttpResponseMessage response = await authorClient.CreateBlogAsync(
@@ -258,7 +272,8 @@ namespace Zn.ClientWebApi.IntegrationTests.Blogs
         public async Task CreateBlog_NonExistentCategoryId_Returns400()
         {
             // Arrange — a random Guid that was never inserted as a category
-            (HttpClient authorClient, _, _) = await _fixture.CreateUserClientAsync("create-badcat");
+            // Faz 5: POST /api/blogs now requires Admin or Manager role.
+            using HttpClient authorClient = await _fixture.CreateManagerClientAsync("create-badcat-mgr");
             Guid fakeCatId = Guid.NewGuid();
 
             // Act
@@ -280,10 +295,11 @@ namespace Zn.ClientWebApi.IntegrationTests.Blogs
         public async Task UpdateBlog_ByAuthor_Returns200WithUpdatedData()
         {
             // Arrange
+            // Faz 5: POST/PUT /api/blogs now requires Admin or Manager role.
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-Update15-{Guid.NewGuid():N}");
 
-            (HttpClient authorClient, _, _) = await _fixture.CreateUserClientAsync("update-author");
+            using HttpClient authorClient = await _fixture.CreateManagerClientAsync("update-manager");
             Guid blogId = await authorClient.ArrangeCreateBlogAsync($"Blog-Orig-{Guid.NewGuid():N}", "Orig desc", catId);
 
             string updatedTitle = $"Updated-{Guid.NewGuid():N}";
@@ -311,16 +327,19 @@ namespace Zn.ClientWebApi.IntegrationTests.Blogs
         [Fact]
         public async Task UpdateBlog_ByNonAuthorNonAdmin_Returns403()
         {
-            // Arrange — author creates blog; attacker tries to update it
+            // Arrange — manager creates blog; a User (non-author, non-admin, non-manager) tries to update.
+            // Faz 5: POST /api/blogs requires Admin or Manager. PUT also requires Admin or Manager.
+            // A plain User role gets 403 at the authorization level (before handler ownership check).
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-Update16-{Guid.NewGuid():N}");
 
-            (HttpClient authorClient, _, _) = await _fixture.CreateUserClientAsync("author-16");
+            using HttpClient authorClient = await _fixture.CreateManagerClientAsync("manager-author-16");
             Guid blogId = await authorClient.ArrangeCreateBlogAsync($"Blog-Auth-{Guid.NewGuid():N}", "Desc", catId);
 
+            // Attacker is a plain User (no Admin, no Manager) — cannot reach the PUT endpoint at all.
             (HttpClient attackerClient, _, _) = await _fixture.CreateUserClientAsync("attacker-16");
 
-            // Act — attacker tries to update author's blog
+            // Act — attacker tries to update manager's blog
             HttpResponseMessage response = await attackerClient.UpdateBlogAsync(
                 blogId,
                 $"Hacked-{Guid.NewGuid():N}",
@@ -329,9 +348,9 @@ namespace Zn.ClientWebApi.IntegrationTests.Blogs
                 "https://example.com/blog-hacked.png",
                 catId);
 
-            // Assert
+            // Assert — 403 expected (User role not allowed on PUT /api/blogs)
             response.StatusCode.Should().Be(HttpStatusCode.Forbidden,
-                because: "only the author or an admin may update a blog");
+                because: "only Admin or Manager role may update a blog (Faz 5 A6 matrix)");
         }
 
         // =========================================================
@@ -342,20 +361,22 @@ namespace Zn.ClientWebApi.IntegrationTests.Blogs
         public async Task DeleteBlog_ByNonAuthorNonAdmin_Returns403()
         {
             // Arrange
+            // Faz 5: POST/DELETE /api/blogs requires Admin or Manager.
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-Delete17a-{Guid.NewGuid():N}");
 
-            (HttpClient authorClient, _, _) = await _fixture.CreateUserClientAsync("author-17a");
+            using HttpClient authorClient = await _fixture.CreateManagerClientAsync("manager-author-17a");
             Guid blogId = await authorClient.ArrangeCreateBlogAsync($"Blog-Del17a-{Guid.NewGuid():N}", "Desc", catId);
 
+            // Attacker is a plain User — cannot reach DELETE /api/blogs at all.
             (HttpClient attackerClient, _, _) = await _fixture.CreateUserClientAsync("attacker-17a");
 
             // Act
             HttpResponseMessage response = await attackerClient.DeleteBlogAsync(blogId);
 
-            // Assert
+            // Assert — 403 at auth level (User role not allowed on DELETE /api/blogs)
             response.StatusCode.Should().Be(HttpStatusCode.Forbidden,
-                because: "a non-author non-admin must not be allowed to delete another user's blog");
+                because: "User role is not allowed to delete any blog (Faz 5 A6 matrix)");
         }
 
         // =========================================================
@@ -365,12 +386,13 @@ namespace Zn.ClientWebApi.IntegrationTests.Blogs
         [Fact]
         public async Task DeleteBlog_ByAdminNotAuthor_Returns204()
         {
-            // Arrange — regular user creates blog; admin deletes it
+            // Arrange — manager creates blog; admin deletes it
+            // Faz 5: Blog creation requires Admin or Manager role.
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-Delete17b-{Guid.NewGuid():N}");
 
-            (HttpClient authorClient, _, _) = await _fixture.CreateUserClientAsync("author-17b");
-            Guid blogId = await authorClient.ArrangeCreateBlogAsync($"Blog-Del17b-{Guid.NewGuid():N}", "Desc", catId);
+            using HttpClient managerClient = await _fixture.CreateManagerClientAsync("manager-author-17b");
+            Guid blogId = await managerClient.ArrangeCreateBlogAsync($"Blog-Del17b-{Guid.NewGuid():N}", "Desc", catId);
 
             // Act — admin deletes a blog they did not author
             HttpResponseMessage response = await adminClient.DeleteBlogAsync(blogId);
@@ -388,10 +410,11 @@ namespace Zn.ClientWebApi.IntegrationTests.Blogs
         public async Task DeleteBlog_ByAuthor_Returns204ThenGetReturns404()
         {
             // Arrange
+            // Faz 5: POST/DELETE /api/blogs requires Admin or Manager role.
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-Delete18-{Guid.NewGuid():N}");
 
-            (HttpClient authorClient, _, _) = await _fixture.CreateUserClientAsync("author-18");
+            using HttpClient authorClient = await _fixture.CreateManagerClientAsync("manager-author-18");
             Guid blogId = await authorClient.ArrangeCreateBlogAsync($"Blog-Del18-{Guid.NewGuid():N}", "Desc", catId);
 
             // Act
@@ -414,15 +437,15 @@ namespace Zn.ClientWebApi.IntegrationTests.Blogs
         [Fact]
         public async Task UpdateBlog_NonExistentId_Returns404NotForbidden()
         {
-            // Arrange — an authenticated (non-admin) user making the request
+            // Arrange — an authenticated Manager making the request (Faz 5: PUT requires Admin/Manager)
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-404PUT-{Guid.NewGuid():N}");
 
-            (HttpClient userClient, _, _) = await _fixture.CreateUserClientAsync("user-404put");
+            using HttpClient managerClient = await _fixture.CreateManagerClientAsync("manager-404put");
             Guid ghostId = Guid.NewGuid();
 
             // Act
-            HttpResponseMessage response = await userClient.UpdateBlogAsync(
+            HttpResponseMessage response = await managerClient.UpdateBlogAsync(
                 ghostId,
                 "Any title",
                 "Any desc",
@@ -444,12 +467,12 @@ namespace Zn.ClientWebApi.IntegrationTests.Blogs
         [Fact]
         public async Task DeleteBlog_NonExistentId_Returns404NotForbidden()
         {
-            // Arrange
-            (HttpClient userClient, _, _) = await _fixture.CreateUserClientAsync("user-404del");
+            // Arrange — Manager role required for DELETE /api/blogs (Faz 5)
+            using HttpClient managerClient = await _fixture.CreateManagerClientAsync("manager-404del");
             Guid ghostId = Guid.NewGuid();
 
             // Act
-            HttpResponseMessage response = await userClient.DeleteBlogAsync(ghostId);
+            HttpResponseMessage response = await managerClient.DeleteBlogAsync(ghostId);
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.NotFound,

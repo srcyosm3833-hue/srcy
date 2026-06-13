@@ -48,8 +48,8 @@ namespace Zn.ClientWebApi.IntegrationTests.Comments
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-Cmnt-C1-{Guid.NewGuid():N}");
 
-            (HttpClient authorClient, _, _) = await _fixture.CreateUserClientAsync("cmnt-c1-author");
-            Guid blogId = await authorClient.ArrangeCreateBlogAsync($"Blog-C1-{Guid.NewGuid():N}", "Desc", catId);
+            // Faz 5: blog creation requires Admin or Manager role.
+            Guid blogId = await adminClient.ArrangeCreateBlogAsync($"Blog-C1-{Guid.NewGuid():N}", "Desc", catId);
 
             // Act
             using HttpClient anonClient = _fixture.CreateClient();
@@ -78,8 +78,9 @@ namespace Zn.ClientWebApi.IntegrationTests.Comments
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-Cmnt-C2-{Guid.NewGuid():N}");
 
+            // Faz 5: blog creation requires Admin or Manager role.
+            Guid blogId = await adminClient.ArrangeCreateBlogAsync($"Blog-C2-{Guid.NewGuid():N}", "Desc", catId);
             (HttpClient userClient, _, _) = await _fixture.CreateUserClientAsync("cmnt-c2-user");
-            Guid blogId = await userClient.ArrangeCreateBlogAsync($"Blog-C2-{Guid.NewGuid():N}", "Desc", catId);
             Guid commentId = await userClient.ArrangeCreateCommentAsync(blogId, "Main comment C2.");
 
             // Add 2 replies to this comment
@@ -125,8 +126,9 @@ namespace Zn.ClientWebApi.IntegrationTests.Comments
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-Cmnt-C3-{Guid.NewGuid():N}");
 
+            // Faz 5: blog creation requires Admin or Manager role.
+            Guid blogId = await adminClient.ArrangeCreateBlogAsync($"Blog-C3-{Guid.NewGuid():N}", "Desc", catId);
             (HttpClient userClient, _, _) = await _fixture.CreateUserClientAsync("cmnt-c3-user");
-            Guid blogId = await userClient.ArrangeCreateBlogAsync($"Blog-C3-{Guid.NewGuid():N}", "Desc", catId);
 
             // Act
             HttpResponseMessage response = await userClient.CreateCommentAsync(blogId, "Hello from C3 test.");
@@ -160,8 +162,8 @@ namespace Zn.ClientWebApi.IntegrationTests.Comments
             // Arrange
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-Cmnt-C4-{Guid.NewGuid():N}");
-            (HttpClient authorClient, _, _) = await _fixture.CreateUserClientAsync("cmnt-c4-author");
-            Guid blogId = await authorClient.ArrangeCreateBlogAsync($"Blog-C4-{Guid.NewGuid():N}", "Desc", catId);
+            // Faz 5: blog creation requires Admin or Manager role.
+            Guid blogId = await adminClient.ArrangeCreateBlogAsync($"Blog-C4-{Guid.NewGuid():N}", "Desc", catId);
 
             // Act — anonymous client attempts to create a comment
             using HttpClient anonClient = _fixture.CreateClient();
@@ -199,8 +201,9 @@ namespace Zn.ClientWebApi.IntegrationTests.Comments
             // Arrange
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-Cmnt-C6-{Guid.NewGuid():N}");
+            // Faz 5: blog creation requires Admin or Manager role.
+            Guid blogId = await adminClient.ArrangeCreateBlogAsync($"Blog-C6-{Guid.NewGuid():N}", "Desc", catId);
             (HttpClient userClient, _, _) = await _fixture.CreateUserClientAsync("cmnt-c6-user");
-            Guid blogId = await userClient.ArrangeCreateBlogAsync($"Blog-C6-{Guid.NewGuid():N}", "Desc", catId);
 
             // Act
             HttpResponseMessage response = await userClient.CreateCommentAsync(blogId, string.Empty);
@@ -219,8 +222,9 @@ namespace Zn.ClientWebApi.IntegrationTests.Comments
             // Arrange
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-Cmnt-C7-{Guid.NewGuid():N}");
+            // Faz 5: blog creation requires Admin or Manager role.
+            Guid blogId = await adminClient.ArrangeCreateBlogAsync($"Blog-C7-{Guid.NewGuid():N}", "Desc", catId);
             (HttpClient userClient, _, _) = await _fixture.CreateUserClientAsync("cmnt-c7-user");
-            Guid blogId = await userClient.ArrangeCreateBlogAsync($"Blog-C7-{Guid.NewGuid():N}", "Desc", catId);
 
             string tooLongText = new string('x', 1001); // 1 character over the 1000-char limit
 
@@ -241,8 +245,9 @@ namespace Zn.ClientWebApi.IntegrationTests.Comments
             // Arrange
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-Cmnt-C8-{Guid.NewGuid():N}");
+            // Faz 5: blog creation requires Admin or Manager role.
+            Guid blogId = await adminClient.ArrangeCreateBlogAsync($"Blog-C8-{Guid.NewGuid():N}", "Desc", catId);
             (HttpClient ownerClient, _, _) = await _fixture.CreateUserClientAsync("cmnt-c8-owner");
-            Guid blogId = await ownerClient.ArrangeCreateBlogAsync($"Blog-C8-{Guid.NewGuid():N}", "Desc", catId);
             Guid commentId = await ownerClient.ArrangeCreateCommentAsync(blogId, "Original text.");
 
             // Act
@@ -273,8 +278,9 @@ namespace Zn.ClientWebApi.IntegrationTests.Comments
             // Arrange
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-Cmnt-C9-{Guid.NewGuid():N}");
+            // Faz 5: blog creation requires Admin or Manager role.
+            Guid blogId = await adminClient.ArrangeCreateBlogAsync($"Blog-C9-{Guid.NewGuid():N}", "Desc", catId);
             (HttpClient ownerClient, _, _) = await _fixture.CreateUserClientAsync("cmnt-c9-owner");
-            Guid blogId = await ownerClient.ArrangeCreateBlogAsync($"Blog-C9-{Guid.NewGuid():N}", "Desc", catId);
             Guid commentId = await ownerClient.ArrangeCreateCommentAsync(blogId, "Owner's comment.");
 
             (HttpClient attackerClient, _, _) = await _fixture.CreateUserClientAsync("cmnt-c9-attacker");
@@ -298,8 +304,9 @@ namespace Zn.ClientWebApi.IntegrationTests.Comments
             // Arrange — user creates a comment; admin tries to edit it
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-Cmnt-C10-{Guid.NewGuid():N}");
+            // Faz 5: blog creation requires Admin or Manager role.
+            Guid blogId = await adminClient.ArrangeCreateBlogAsync($"Blog-C10-{Guid.NewGuid():N}", "Desc", catId);
             (HttpClient userClient, _, _) = await _fixture.CreateUserClientAsync("cmnt-c10-user");
-            Guid blogId = await userClient.ArrangeCreateBlogAsync($"Blog-C10-{Guid.NewGuid():N}", "Desc", catId);
             Guid commentId = await userClient.ArrangeCreateCommentAsync(blogId, "User's comment.");
 
             // Act — admin (not owner) attempts to edit
@@ -321,8 +328,9 @@ namespace Zn.ClientWebApi.IntegrationTests.Comments
             // Arrange
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-Cmnt-C11-{Guid.NewGuid():N}");
+            // Faz 5: blog creation requires Admin or Manager role.
+            Guid blogId = await adminClient.ArrangeCreateBlogAsync($"Blog-C11-{Guid.NewGuid():N}", "Desc", catId);
             (HttpClient ownerClient, _, _) = await _fixture.CreateUserClientAsync("cmnt-c11-owner");
-            Guid blogId = await ownerClient.ArrangeCreateBlogAsync($"Blog-C11-{Guid.NewGuid():N}", "Desc", catId);
             Guid commentId = await ownerClient.ArrangeCreateCommentAsync(blogId, "To be deleted by owner.");
 
             // Act
@@ -342,8 +350,9 @@ namespace Zn.ClientWebApi.IntegrationTests.Comments
             // Arrange — user creates a comment; admin deletes it
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-Cmnt-C12-{Guid.NewGuid():N}");
+            // Faz 5: blog creation requires Admin or Manager role.
+            Guid blogId = await adminClient.ArrangeCreateBlogAsync($"Blog-C12-{Guid.NewGuid():N}", "Desc", catId);
             (HttpClient userClient, _, _) = await _fixture.CreateUserClientAsync("cmnt-c12-user");
-            Guid blogId = await userClient.ArrangeCreateBlogAsync($"Blog-C12-{Guid.NewGuid():N}", "Desc", catId);
             Guid commentId = await userClient.ArrangeCreateCommentAsync(blogId, "To be deleted by admin.");
 
             // Act
@@ -369,14 +378,20 @@ namespace Zn.ClientWebApi.IntegrationTests.Comments
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-Cmnt-C13-{Guid.NewGuid():N}");
 
-            (HttpClient blogAuthorClient, _, _) = await _fixture.CreateUserClientAsync("cmnt-c13-blogauthor");
-            Guid blogId = await blogAuthorClient.ArrangeCreateBlogAsync(
+            // Faz 5: blog creation requires Admin or Manager role.
+            // A plain User (blogAuthorClient) acts as the blog "author" in the social sense,
+            // but they cannot actually create the blog (Manager needed). We use adminClient to
+            // create the blog, then a separate User acts as someone who would be the "blog manager"
+            // but is not the comment owner. The scenario remains valid: a non-comment-owner, non-admin
+            // User attempts to delete a commenter's comment and must get 403.
+            Guid blogId = await adminClient.ArrangeCreateBlogAsync(
                 $"Blog-C13-{Guid.NewGuid():N}", "Desc", catId);
 
+            (HttpClient blogAuthorClient, _, _) = await _fixture.CreateUserClientAsync("cmnt-c13-blogauthor");
             (HttpClient commenterClient, _, _) = await _fixture.CreateUserClientAsync("cmnt-c13-commenter");
             Guid commentId = await commenterClient.ArrangeCreateCommentAsync(blogId, "Commenter's message.");
 
-            // Act — blog author (userA) attempts to delete commenter's (userB's) comment
+            // Act — blogAuthorClient (a plain User, neither comment owner nor admin) attempts to delete commenter's comment
             HttpResponseMessage response = await blogAuthorClient.DeleteCommentAsync(blogId, commentId);
 
             // Assert — blog author has no special privilege; only comment owner or admin may delete
@@ -394,8 +409,9 @@ namespace Zn.ClientWebApi.IntegrationTests.Comments
             // Arrange
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-Cmnt-C14-{Guid.NewGuid():N}");
+            // Faz 5: blog creation requires Admin or Manager role.
+            Guid blogId = await adminClient.ArrangeCreateBlogAsync($"Blog-C14-{Guid.NewGuid():N}", "Desc", catId);
             (HttpClient userClient, _, _) = await _fixture.CreateUserClientAsync("cmnt-c14-user");
-            Guid blogId = await userClient.ArrangeCreateBlogAsync($"Blog-C14-{Guid.NewGuid():N}", "Desc", catId);
             Guid fakeCommentId = Guid.NewGuid();
 
             // Act

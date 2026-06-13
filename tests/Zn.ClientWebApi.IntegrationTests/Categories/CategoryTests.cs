@@ -326,15 +326,15 @@ namespace Zn.ClientWebApi.IntegrationTests.Categories
         // =========================================================
 
         [Fact]
-        public async Task Delete_CategoryWithBlogs_Returns409()
+        public async Task Delete_CategoryWithBlogs_Returns204()
         {
             // Arrange — create a category, then create a blog in that category
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid categoryId = await adminClient.ArrangeCreateCategoryAsync($"Cat-HasBlogs-{Guid.NewGuid():N}");
 
-            // Use a regular user to create a blog (any authenticated user can create blogs)
-            (HttpClient userClient, _, _) = await _fixture.CreateUserClientAsync("cat-hasblogs-author");
-            await userClient.ArrangeCreateBlogAsync(
+            // Faz 5: POST /api/blogs now requires Admin or Manager role (A6 matrix).
+            using HttpClient managerClient = await _fixture.CreateManagerClientAsync("cat-hasblogs-manager");
+            await managerClient.ArrangeCreateBlogAsync(
                 $"Blog in category {Guid.NewGuid():N}",
                 "Some description for the blog.",
                 categoryId);
@@ -342,8 +342,11 @@ namespace Zn.ClientWebApi.IntegrationTests.Categories
             // Act — admin tries to delete the category that still has a blog
             HttpResponseMessage response = await adminClient.DeleteCategoryAsync(categoryId);
 
-            // Assert — FK Restrict → handler returns 409 before hitting the DB constraint
-            response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+            // Assert — Faz 5 soft-delete: category with blogs can now be soft-deleted (204).
+            // The old "409 Conflict" behavior (Restrict FK) was removed when soft-delete was introduced:
+            // soft-deleting a category does not trigger the FK constraint, so it always returns 204.
+            response.StatusCode.Should().Be(HttpStatusCode.NoContent,
+                because: "Faz 5 soft-delete allows deleting a category that has blogs (no FK violation)");
         }
     }
 }

@@ -43,8 +43,9 @@ namespace Zn.ClientWebApi.IntegrationTests.Comments
             // Arrange
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-SC1-{Guid.NewGuid():N}");
+            // Faz 5: blog creation requires Admin or Manager role.
+            Guid blogId = await adminClient.ArrangeCreateBlogAsync($"Blog-SC1-{Guid.NewGuid():N}", "Desc", catId);
             (HttpClient userClient, _, _) = await _fixture.CreateUserClientAsync("sc1-user");
-            Guid blogId = await userClient.ArrangeCreateBlogAsync($"Blog-SC1-{Guid.NewGuid():N}", "Desc", catId);
             Guid commentId = await userClient.ArrangeCreateCommentAsync(blogId, "Parent comment SC1.");
 
             // Act
@@ -76,8 +77,9 @@ namespace Zn.ClientWebApi.IntegrationTests.Comments
             // Arrange
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-SC2-{Guid.NewGuid():N}");
+            // Faz 5: blog creation requires Admin or Manager role.
+            Guid blogId = await adminClient.ArrangeCreateBlogAsync($"Blog-SC2-{Guid.NewGuid():N}", "Desc", catId);
             (HttpClient userClient, _, _) = await _fixture.CreateUserClientAsync("sc2-user");
-            Guid blogId = await userClient.ArrangeCreateBlogAsync($"Blog-SC2-{Guid.NewGuid():N}", "Desc", catId);
             Guid commentId = await userClient.ArrangeCreateCommentAsync(blogId, "Parent comment SC2.");
 
             // Act — anonymous client
@@ -116,8 +118,9 @@ namespace Zn.ClientWebApi.IntegrationTests.Comments
             // Arrange
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-SC4-{Guid.NewGuid():N}");
+            // Faz 5: blog creation requires Admin or Manager role.
+            Guid blogId = await adminClient.ArrangeCreateBlogAsync($"Blog-SC4-{Guid.NewGuid():N}", "Desc", catId);
             (HttpClient userClient, _, _) = await _fixture.CreateUserClientAsync("sc4-user");
-            Guid blogId = await userClient.ArrangeCreateBlogAsync($"Blog-SC4-{Guid.NewGuid():N}", "Desc", catId);
             Guid commentId = await userClient.ArrangeCreateCommentAsync(blogId, "Parent SC4.");
 
             // Act
@@ -137,8 +140,9 @@ namespace Zn.ClientWebApi.IntegrationTests.Comments
             // Arrange
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-SC5-{Guid.NewGuid():N}");
+            // Faz 5: blog creation requires Admin or Manager role.
+            Guid blogId = await adminClient.ArrangeCreateBlogAsync($"Blog-SC5-{Guid.NewGuid():N}", "Desc", catId);
             (HttpClient userClient, _, _) = await _fixture.CreateUserClientAsync("sc5-user");
-            Guid blogId = await userClient.ArrangeCreateBlogAsync($"Blog-SC5-{Guid.NewGuid():N}", "Desc", catId);
             Guid commentId = await userClient.ArrangeCreateCommentAsync(blogId, "Parent SC5.");
 
             string tooLongText = new string('y', 1001);
@@ -160,8 +164,9 @@ namespace Zn.ClientWebApi.IntegrationTests.Comments
             // Arrange
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-SC6-{Guid.NewGuid():N}");
+            // Faz 5: blog creation requires Admin or Manager role.
+            Guid blogId = await adminClient.ArrangeCreateBlogAsync($"Blog-SC6-{Guid.NewGuid():N}", "Desc", catId);
             (HttpClient ownerClient, _, _) = await _fixture.CreateUserClientAsync("sc6-owner");
-            Guid blogId = await ownerClient.ArrangeCreateBlogAsync($"Blog-SC6-{Guid.NewGuid():N}", "Desc", catId);
             Guid commentId = await ownerClient.ArrangeCreateCommentAsync(blogId, "Parent SC6.");
             Guid replyId = await ownerClient.ArrangeCreateReplyAsync(commentId, "Original reply SC6.");
 
@@ -192,8 +197,9 @@ namespace Zn.ClientWebApi.IntegrationTests.Comments
             // Arrange
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-SC7-{Guid.NewGuid():N}");
+            // Faz 5: blog creation requires Admin or Manager role.
+            Guid blogId = await adminClient.ArrangeCreateBlogAsync($"Blog-SC7-{Guid.NewGuid():N}", "Desc", catId);
             (HttpClient ownerClient, _, _) = await _fixture.CreateUserClientAsync("sc7-owner");
-            Guid blogId = await ownerClient.ArrangeCreateBlogAsync($"Blog-SC7-{Guid.NewGuid():N}", "Desc", catId);
             Guid commentId = await ownerClient.ArrangeCreateCommentAsync(blogId, "Parent SC7.");
             Guid replyId = await ownerClient.ArrangeCreateReplyAsync(commentId, "Owner's reply SC7.");
 
@@ -218,8 +224,9 @@ namespace Zn.ClientWebApi.IntegrationTests.Comments
             // Arrange
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-SC8-{Guid.NewGuid():N}");
+            // Faz 5: blog creation requires Admin or Manager role.
+            Guid blogId = await adminClient.ArrangeCreateBlogAsync($"Blog-SC8-{Guid.NewGuid():N}", "Desc", catId);
             (HttpClient ownerClient, _, _) = await _fixture.CreateUserClientAsync("sc8-owner");
-            Guid blogId = await ownerClient.ArrangeCreateBlogAsync($"Blog-SC8-{Guid.NewGuid():N}", "Desc", catId);
             Guid commentId = await ownerClient.ArrangeCreateCommentAsync(blogId, "Parent SC8.");
             Guid replyId = await ownerClient.ArrangeCreateReplyAsync(commentId, "Reply to delete SC8.");
 
@@ -240,8 +247,9 @@ namespace Zn.ClientWebApi.IntegrationTests.Comments
             // Arrange — user creates reply; admin deletes it
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-SC9-{Guid.NewGuid():N}");
+            // Faz 5: blog creation requires Admin or Manager role.
+            Guid blogId = await adminClient.ArrangeCreateBlogAsync($"Blog-SC9-{Guid.NewGuid():N}", "Desc", catId);
             (HttpClient userClient, _, _) = await _fixture.CreateUserClientAsync("sc9-user");
-            Guid blogId = await userClient.ArrangeCreateBlogAsync($"Blog-SC9-{Guid.NewGuid():N}", "Desc", catId);
             Guid commentId = await userClient.ArrangeCreateCommentAsync(blogId, "Parent SC9.");
             Guid replyId = await userClient.ArrangeCreateReplyAsync(commentId, "User reply to admin-delete.");
 
@@ -263,8 +271,9 @@ namespace Zn.ClientWebApi.IntegrationTests.Comments
             // Arrange
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-SC10-{Guid.NewGuid():N}");
+            // Faz 5: blog creation requires Admin or Manager role.
+            Guid blogId = await adminClient.ArrangeCreateBlogAsync($"Blog-SC10-{Guid.NewGuid():N}", "Desc", catId);
             (HttpClient ownerClient, _, _) = await _fixture.CreateUserClientAsync("sc10-owner");
-            Guid blogId = await ownerClient.ArrangeCreateBlogAsync($"Blog-SC10-{Guid.NewGuid():N}", "Desc", catId);
             Guid commentId = await ownerClient.ArrangeCreateCommentAsync(blogId, "Parent SC10.");
             Guid replyId = await ownerClient.ArrangeCreateReplyAsync(commentId, "Owner's reply SC10.");
 
@@ -288,8 +297,9 @@ namespace Zn.ClientWebApi.IntegrationTests.Comments
             // Arrange — create blog, comment, and a reply; then delete the parent comment
             using HttpClient adminClient = await _fixture.CreateAdminClientAsync();
             Guid catId = await adminClient.ArrangeCreateCategoryAsync($"Cat-SC11-{Guid.NewGuid():N}");
+            // Faz 5: blog creation requires Admin or Manager role.
+            Guid blogId = await adminClient.ArrangeCreateBlogAsync($"Blog-SC11-{Guid.NewGuid():N}", "Desc", catId);
             (HttpClient userClient, _, _) = await _fixture.CreateUserClientAsync("sc11-user");
-            Guid blogId = await userClient.ArrangeCreateBlogAsync($"Blog-SC11-{Guid.NewGuid():N}", "Desc", catId);
             Guid commentId = await userClient.ArrangeCreateCommentAsync(blogId, "Parent SC11 — will be deleted.");
             await userClient.ArrangeCreateReplyAsync(commentId, "Existing reply SC11.");
 
