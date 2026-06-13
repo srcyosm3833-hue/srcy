@@ -18,6 +18,7 @@ export const paths = {
   /** Blog duzenleme yolu uretici. */
   adminBlogEdit: (id: string | number = ':id') => `/admin/blogs/${id}/edit`,
   adminCategories: '/admin/categories',
+  adminComments: '/admin/comments',
   adminMessages: '/admin/messages',
   adminSocialMedia: '/admin/social-media',
 } as const

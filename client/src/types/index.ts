@@ -31,6 +31,7 @@ export type {
 export type {
   Comment,
   SubComment,
+  CommentModerationItem,
   AddCommentRequest,
   UpdateCommentRequest,
   AddReplyRequest,

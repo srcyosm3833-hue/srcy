@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Zn.Application.Features.Comments.Common;
+using Zn.Application.Features.Comments.GetAllForAdmin;
 using Zn.Domain.Entity;
 
 namespace Zn.Application.Interfaces.Persistence
@@ -33,6 +34,24 @@ namespace Zn.Application.Interfaces.Persistence
             int page,
             int pageSize,
             string? currentUserId,
+            CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Tüm bloglardaki yorumları VE alt yorumları tek bir DÜZ (flat) moderasyon kümesinde,
+        /// createdAt azalan sıralı + sayfalanmış olarak ve toplam sayısıyla birlikte döner (admin).
+        /// Comments ve SubComments tabloları ayrı projeksiyonlarla ortak <see cref="CommentModerationItem"/>
+        /// şekline çevrilip veritabanı seviyesinde birleştirilir (Concat); sayfalama ve sıralama DB
+        /// tarafında uygulanır. Yalnızca okuma amaçlıdır (AsNoTracking + DB seviyesinde projeksiyon).
+        /// <para>
+        /// Comment ve SubComment global query filter'ları (silinmiş blogun yorumları + silinmiş
+        /// kullanıcının alt yorumları otomatik dışlanır) burada bypass EDİLMEZ; moderasyon listesi
+        /// yalnızca aktif kayıtları döner.
+        /// </para>
+        /// </summary>
+        /// <returns>Geçerli sayfadaki düz moderasyon öğeleri ve filtreye uyan toplam (yorum + alt yorum) sayısı.</returns>
+        Task<(IReadOnlyList<CommentModerationItem> Items, int TotalCount)> GetPagedForModerationAsync(
+            int page,
+            int pageSize,
             CancellationToken cancellationToken);
 
         /// <summary>Verilen Id'ye sahip bir blog var mı? Yorum listeleme/ekleme öncesi doğrulama için.</summary>

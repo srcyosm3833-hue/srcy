@@ -46,6 +46,31 @@ export interface UpdateCommentRequest {
   commentText: string
 }
 
+/**
+ * Admin moderasyon listesi ogesi (yorum VEYA alt yorum birlikte).
+ * Kaynak: Features/.../CommentModerationResponse.cs
+ * Endpoint: GET /api/admin/comments (Authorize: Admin)
+ *
+ * isReply alanina gore silme route'u degisir:
+ *  - isReply=false -> DELETE /api/blogs/{blogId}/comments/{id}
+ *  - isReply=true  -> DELETE /api/comments/{parentCommentId}/replies/{id}
+ */
+export interface CommentModerationItem {
+  id: string
+  /** true ise alt yorum (reply); false ise ust seviye yorum. */
+  isReply: boolean
+  blogId: string
+  blogTitle: string
+  userId: string
+  /** Yazarin gorunen adi. */
+  authorName: string
+  /** Yorum/yanit metni. */
+  text: string
+  createdAt: string
+  /** isReply=true oldugunda dolu (ust yorum id'si); aksi halde null. */
+  parentCommentId: string | null
+}
+
 /** POST /api/comments/{commentId}/replies govdesi. */
 export interface AddReplyRequest {
   subCommentText: string

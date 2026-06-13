@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   LogOut,
   Mail,
+  MessageSquare,
   Share2,
   Tag,
 } from 'lucide-react'
@@ -34,10 +35,15 @@ const navItems: AdminNavItem[] = [
   { to: paths.admin, label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: paths.adminBlogs, label: 'Bloglar', icon: FileText },
   { to: paths.adminCategories, label: 'Kategoriler', icon: Tag },
+  // Yorum moderasyonu backend'de yalniz Admin'e acik (Manager 403 alir) -> adminOnly.
+  {
+    to: paths.adminComments,
+    label: 'Yorumlar',
+    icon: MessageSquare,
+    adminOnly: true,
+  },
   { to: paths.adminMessages, label: 'Mesajlar', icon: Mail },
   { to: paths.adminSocialMedia, label: 'Sosyal Medya', icon: Share2 },
-  // Yalniz-Admin menu ogeleri (kullanici/rol yonetimi) Ozellik 2/3'te buraya
-  // `adminOnly: true` ile eklenecek; altyapi asagidaki filtre ile hazirdir.
 ]
 
 interface AdminSidebarProps {

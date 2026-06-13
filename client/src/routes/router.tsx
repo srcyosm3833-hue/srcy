@@ -31,6 +31,7 @@ const AdminBlogFormPage = lazy(() => import('@/pages/admin/AdminBlogFormPage'))
 const AdminCategoriesPage = lazy(
   () => import('@/pages/admin/AdminCategoriesPage'),
 )
+const AdminCommentsPage = lazy(() => import('@/pages/admin/AdminCommentsPage'))
 const AdminMessagesPage = lazy(() => import('@/pages/admin/AdminMessagesPage'))
 const AdminSocialMediaPage = lazy(
   () => import('@/pages/admin/AdminSocialMediaPage'),
@@ -63,6 +64,7 @@ export const router = createBrowserRouter([
           { path: paths.adminBlogCreate, element: <AdminBlogFormPage /> },
           { path: paths.adminBlogEdit(), element: <AdminBlogFormPage /> },
           { path: paths.adminCategories, element: <AdminCategoriesPage /> },
+          { path: paths.adminComments, element: <AdminCommentsPage /> },
           { path: paths.adminMessages, element: <AdminMessagesPage /> },
           { path: paths.adminSocialMedia, element: <AdminSocialMediaPage /> },
         ],
