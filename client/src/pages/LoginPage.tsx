@@ -1,16 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { Loader2 } from 'lucide-react'
-import { toast } from 'sonner'
 
 import { useAuth } from '@/features/auth'
 import { paths } from '@/routes/paths'
-import { normalizeApiError } from '@/lib/api'
-import { applyFieldErrors } from '@/lib/applyFieldErrors'
-import { Button } from '@/components/ui/button'
+import { LoginForm } from '@/components/auth/LoginForm'
 import {
   Card,
   CardContent,
@@ -19,47 +12,21 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { PasswordInput } from '@/components/forms/PasswordInput'
-
-/** Login form dogrulama semasi (client-side). Backend kurallari submit'te uygulanir. */
-const loginSchema = z.object({
-  email: z
-    .string()
-    .min(1, 'E-posta zorunludur.')
-    .email('Geçerli bir e-posta adresi girin.'),
-  password: z.string().min(1, 'Şifre zorunludur.'),
-})
-
-type LoginFormValues = z.infer<typeof loginSchema>
 
 /** react-router location.state.from sekli (korumali sayfadan yonlendirme). */
 interface LocationState {
   from?: { pathname?: string }
 }
 
+/**
+ * Tam sayfa giris ekrani. Deep-link ve ProtectedRoute yonlendirmesi icin korunur
+ * (A-AO1). Form mantigi paylasilan `LoginForm` bileseninde; bu sayfa yalnizca
+ * yerlesim (Card) + zaten-giris-yapilmis ve basari-sonrasi yonlendirmeyi yonetir.
+ */
 export default function LoginPage() {
-  const { login, isAuthenticated, isInitializing } = useAuth()
+  const { isAuthenticated, isInitializing } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-
-  // Genel (alan disi) hata mesaji — orn. 401 "gecersiz kimlik".
-  const [formError, setFormError] = useState<string | null>(null)
-
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
-  })
-
-  const { isSubmitting } = form.formState
 
   // Geri donulecek hedef (korumali sayfadan geldiyse oraya, yoksa anasayfa).
   const fromPath =
@@ -71,33 +38,6 @@ export default function LoginPage() {
       navigate(fromPath, { replace: true })
     }
   }, [isInitializing, isAuthenticated, navigate, fromPath])
-
-  async function onSubmit(values: LoginFormValues) {
-    setFormError(null)
-    try {
-      await login(values)
-      navigate(fromPath, { replace: true })
-    } catch (error) {
-      const normalized = normalizeApiError(error)
-
-      // 401: kimlik dogrulama basarisiz -> genel form hatasi.
-      if (normalized.status === 401) {
-        setFormError('Geçersiz e-posta veya şifre.')
-        return
-      }
-
-      // 400: alan bazli dogrulama hatalari -> form alanlarinin altina yaz.
-      const applied = applyFieldErrors(normalized, form.setError, [
-        'email',
-        'password',
-      ])
-      if (applied) return
-
-      // Diger hatalar: genel mesaj + toast.
-      setFormError(normalized.message)
-      toast.error('Giriş yapılamadı.', { description: normalized.message })
-    }
-  }
 
   return (
     <section className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-muted/40 px-4 py-12">
@@ -114,71 +54,7 @@ export default function LoginPage() {
         </CardHeader>
 
         <CardContent>
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-4"
-              noValidate
-            >
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>E-posta</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        autoComplete="email"
-                        placeholder="ornek@eposta.com"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Şifre</FormLabel>
-                    <FormControl>
-                      <PasswordInput
-                        autoComplete="current-password"
-                        placeholder="••••••••"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Genel form hatasi (alan disi) */}
-              {formError ? (
-                <p
-                  role="alert"
-                  className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive"
-                >
-                  {formError}
-                </p>
-              ) : null}
-
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Giriş yapılıyor…
-                  </>
-                ) : (
-                  'Giriş Yap'
-                )}
-              </Button>
-            </form>
-          </Form>
+          <LoginForm onSuccess={() => navigate(fromPath, { replace: true })} />
         </CardContent>
 
         <CardFooter className="justify-center">

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { CategoryBadge } from '@/components/blog/CategoryBadge'
 import { LikeButton } from '@/components/blog/LikeButton'
+import { ShareButtons } from '@/components/blog/ShareButtons'
 import { BlogDetailSkeleton } from '@/components/blog/BlogDetailSkeleton'
 import { ErrorState } from '@/components/common/ErrorState'
 import { EmptyState } from '@/components/common/EmptyState'
@@ -67,13 +68,14 @@ export default function BlogDetailPage() {
               ) : null}
             </div>
 
-            {/* Begeni butonu */}
-            <div className="mt-6">
+            {/* Begeni + paylasim cubugu */}
+            <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3">
               <LikeButton
                 blogId={blogQuery.data.id}
                 likeCount={blogQuery.data.likeCount}
                 isLiked={blogQuery.data.isLikedByCurrentUser}
               />
+              <ShareButtons title={blogQuery.data.title} />
             </div>
           </header>
 

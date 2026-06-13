@@ -60,8 +60,14 @@ Katmanlar ve referans yönü: `Zn.Domain` ← `Zn.Application` ← `Zn.Persisten
 
 13. **Like + Sosyal Paylaşım + Arama (Faz 5 — A9/A10/A11).** Beğeni **yalnız giriş yapmış kullanıcılara** açık (anonim yok), idempotent toggle (**A9**); ayrı `BlogLike` ve yorum/alt-yorum için ayrı like tabloları (**A10**). Sosyal paylaşım = Web Share API / paylaş linkleri. Arama ilk aşamada **EF Core LIKE** (başlık + açıklama), `PagedResult` uyumlu; ileride Elasticsearch geçiş kapısı açık (**A11**). Detaylı faz planı + görevlendirme prompt'ları: `docs/features/FAZ5-PLAN.md`.
 
+14. **Sosyal Giriş (Faz 6 — A-SL).** Google + Facebook ile kayıt/giriş; **Instagram kapsam dışı** (Basic Display API 4 Aralık 2024'te kapandı, Graph API yalnız Business/Creator). Akış **backend-merkezli** — ASP.NET `AddAuthentication().AddGoogle/AddFacebook`, challenge/callback; external login sonrası **bizim JWT access + refresh token** üretilir (mevcut `JwtTokenService` + rotation). Kararlar: aynı e-posta → **otomatik hesap birleştirme etkin** (mevcut User'a provider eklenir) (**A-SL1**); backend-merkezli akış (**A-SL2**); callback sonrası token **URL fragment** ile frontend'e iletilir (`/auth/callback#access_token=...`) (**A-SL3**); provider e-posta paylaşmazsa (Facebook) **hesap açılmaz**, uyarı gösterilir (**A-SL4**). Soft-delete edilmiş kullanıcı sosyal login ile de giriş yapamaz. Client ID/Secret user-secrets'ta. Detay: `docs/features/SOCIAL-LOGIN-PLAN.md`.
+
+15. **Animasyonlu Auth Overlay (Faz 6 — A-AO).** Login/Register ayrı sayfa yerine header butonundan açılan **shadcn Sheet tabanlı, sağ kenardan içeri kayan (sağdan sola) tam boy animasyonlu drawer** (slide-in-from-right; login↔register panel içi yatay geçişi). Kararlar: `/login` ve `/register` route'ları **korunur (hibrit)** — deep-link/`ProtectedRoute` yönlendirmesi çalışmaya devam eder, header butonları overlay açar (**A-AO1**); overlay **yalnız ESC + X** ile kapanır, arka plan tıklamasıyla değil (form kaybı riski) (**A-AO2**); overlay state global **`useAuthOverlay` context** ile yönetilir (**A-AO3**). İçinde sosyal giriş butonları için slot bırakılır. Detay: `docs/features/AUTH-OVERLAY-PLAN.md`.
+
 > Not: Madde 8'deki API base URL geliştirme tercihi `https://localhost:7253` (https profili) olarak güncellendi; `--launch-profile https` ile çalıştırılır, dev sertifikası güvenilir. HTTP isteyen `http://localhost:5241` + `--launch-profile http` kullanabilir.
+
+> Uygulama sırası (Faz 6): **ÖNCE Auth Overlay** (dış bağımlılığı yok), **SONRA Sosyal Giriş** (overlay'deki hazır slota butonlar eklenir).
 
 ## Açık Kararlar
 
-Şu an açık mimari karar yok — tüm kesinleşmiş kararlar yukarıda (Faz 5 kararları A6–A11 dahil; detay: `docs/features/FAZ5-PLAN.md`). Yeni bir belirsizlik çıkarsa uygulamadan önce kullanıcıya sor ve buraya işle.
+Şu an açık mimari karar yok — tüm kesinleşmiş kararlar yukarıda (Faz 5 kararları A6–A11; Faz 6 kararları A-SL1–4 ve A-AO1–3 dahil; detaylar: `docs/features/FAZ5-PLAN.md`, `docs/features/SOCIAL-LOGIN-PLAN.md`, `docs/features/AUTH-OVERLAY-PLAN.md`). Yeni bir belirsizlik çıkarsa uygulamadan önce kullanıcıya sor ve buraya işle.

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { LogOut, Menu, PenLine, ShieldCheck } from 'lucide-react'
 
-import { useAuth } from '@/features/auth'
+import { useAuth, useAuthOverlay } from '@/features/auth'
 import { paths } from '@/routes/paths'
 import { cn } from '@/lib/utils'
 import { getInitials } from '@/lib/initials'
@@ -63,6 +63,7 @@ function Logo({ onClick }: { onClick?: () => void }) {
  */
 export function SiteHeader() {
   const { user, isAuthenticated, isAdmin, isInitializing, logout } = useAuth()
+  const { openLogin, openRegister } = useAuthOverlay()
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -190,16 +191,16 @@ export function SiteHeader() {
                     </Button>
                   </div>
                 ) : (
+                  /* Anonim (mobil): Sheet'i kapat + overlay'i ac. SheetClose,
+                     Button'in onClick'inden sonra Sheet'i kapatir. */
                   <div className="flex flex-col gap-2">
                     <SheetClose asChild>
-                      <Button asChild variant="outline">
-                        <Link to={paths.login}>Giriş Yap</Link>
+                      <Button variant="outline" onClick={openLogin}>
+                        Giriş Yap
                       </Button>
                     </SheetClose>
                     <SheetClose asChild>
-                      <Button asChild>
-                        <Link to={paths.register}>Kayıt Ol</Link>
-                      </Button>
+                      <Button onClick={openRegister}>Kayıt Ol</Button>
                     </SheetClose>
                   </div>
                 )}
@@ -212,15 +213,21 @@ export function SiteHeader() {
   )
 }
 
-/** Anonim kullanici: Giris (outline) + Kayit (primary). */
+/**
+ * Anonim kullanici: Giris (ghost) + Kayit (primary). Butonlar `/login`/`/register`
+ * sayfasina gitmek yerine animasyonlu overlay'i acar (route'lar deep-link icin
+ * korunur, bkz. A-AO1). Overlay durumu useAuthOverlay context'inden gelir.
+ */
 function AnonymousNav() {
+  const { openLogin, openRegister } = useAuthOverlay()
+
   return (
     <>
-      <Button asChild variant="ghost" size="sm">
-        <Link to={paths.login}>Giriş Yap</Link>
+      <Button variant="ghost" size="sm" onClick={openLogin}>
+        Giriş Yap
       </Button>
-      <Button asChild size="sm">
-        <Link to={paths.register}>Kayıt Ol</Link>
+      <Button size="sm" onClick={openRegister}>
+        Kayıt Ol
       </Button>
     </>
   )

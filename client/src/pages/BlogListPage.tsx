@@ -40,10 +40,15 @@ export default function BlogListPage() {
   const [searchInput, setSearchInput] = useState(queryTerm)
   const debouncedInput = useDebouncedValue(searchInput, SEARCH_DEBOUNCE_MS)
 
-  // Geri/ileri ile URL disardan degisirse input'u senkronla.
-  useEffect(() => {
+  // Geri/ileri ile URL (?q=) disardan degisirse input'u senkronla. Effect yerine
+  // render sirasinda "disardan gelen degisiklikte state'i ayarla" deseni kullanilir
+  // (React onerisi); cascading render olusturmaz ve set-state-in-effect kuralina
+  // takilmaz.
+  const [prevQueryTerm, setPrevQueryTerm] = useState(queryTerm)
+  if (queryTerm !== prevQueryTerm) {
+    setPrevQueryTerm(queryTerm)
     setSearchInput(queryTerm)
-  }, [queryTerm])
+  }
 
   // Debounce edilmis terim URL'deki ile farkliysa URL'i guncelle (ilk sayfaya don).
   useEffect(() => {

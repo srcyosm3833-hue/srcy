@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { Outlet } from 'react-router-dom'
 
+import { AuthOverlay } from '@/components/auth/AuthOverlay'
 import { SiteHeader } from './SiteHeader'
 import { SiteFooter } from './SiteFooter'
 
@@ -29,6 +30,10 @@ export function RootLayout() {
       </main>
 
       <SiteFooter />
+
+      {/* Login/register overlay — tum public sayfalardan acilabilir. Router
+          baglami icinde render edilir (icindeki <Link>'ler icin gerekli). */}
+      <AuthOverlay />
     </div>
   )
 }
