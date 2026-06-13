@@ -93,13 +93,23 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+// HTTPS yönlendirmesi YALNIZCA development DIŞINDA uygulanır. Development'ta
+// http profili (yalnız 5241) ile çalışıldığında, yönlendirme istekleri (ve
+// CORS preflight'larını) dinlenmeyen https://localhost:7253'e 307 ile gönderir;
+// bu da "sunucuya ulaşılamadı" ve başarısız preflight'a yol açar. https profili
+// kullananlar zaten doğrudan 7253'e bağlandığından bundan etkilenmez.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
+app.UseCors(CorsRegistration.DevelopmentPolicy);
 
 // Yüklenen görselleri (wwwroot/uploads → /uploads) statik dosya olarak servis eder.
 // Kimlik doğrulamadan önce gelir: yüklenen görseller herkese açık okunabilir.
+// UseCors'tan SONRA gelir ki CORS başlıkları statik dosya yanıtlarına da eklensin
+// (frontend farklı origin'de — 5173 — olduğundan canvas/fetch erişimi için gerekir).
 app.UseStaticFiles();
-
-app.UseCors(CorsRegistration.DevelopmentPolicy);
 
 // Sıralama kritik: önce kimlik doğrulama, sonra yetkilendirme.
 app.UseAuthentication();
