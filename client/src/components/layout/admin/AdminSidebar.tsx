@@ -8,7 +8,9 @@ import {
   Phone,
   Search,
   Share2,
+  Shield,
   Tag,
+  Users,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -53,6 +55,11 @@ const navItems: AdminNavItem[] = [
     adminOnly: true,
   },
   { to: paths.adminSocialMedia, label: 'Sosyal Medya', icon: Share2 },
+  // Kullanici listeleme Admin + Manager'a acik (rol atama aksiyonu sayfa icinde
+  // yalniz Admin'e gosterilir) -> adminOnly DEGIL.
+  { to: paths.adminUsers, label: 'Kullanıcılar', icon: Users },
+  // Rol yonetimi yalniz Admin (A6 matrisi) -> adminOnly.
+  { to: paths.adminRoles, label: 'Rol Yönetimi', icon: Shield, adminOnly: true },
   // Arama loglari KVKK kapsaminda; yalniz Admin (A-AU5) -> adminOnly.
   {
     to: paths.adminSearchLogs,

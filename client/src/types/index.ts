@@ -51,3 +51,13 @@ export type {
 } from './socialMedia'
 export type { UploadImageResponse } from './upload'
 export type { SearchLog, SearchLogQuery } from './searchLog'
+export type {
+  Role,
+  CreateRoleRequest,
+  UpdateRoleRequest,
+} from './role'
+export type {
+  User,
+  UserListQuery,
+  AssignRoleRequest,
+} from './user'

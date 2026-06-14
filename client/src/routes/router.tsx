@@ -37,6 +37,8 @@ const AdminContactPage = lazy(() => import('@/pages/admin/AdminContactPage'))
 const AdminSocialMediaPage = lazy(
   () => import('@/pages/admin/AdminSocialMediaPage'),
 )
+const AdminUsersPage = lazy(() => import('@/pages/admin/AdminUsersPage'))
+const AdminRolesPage = lazy(() => import('@/pages/admin/AdminRolesPage'))
 const AdminSearchLogsPage = lazy(
   () => import('@/pages/admin/AdminSearchLogsPage'),
 )
@@ -72,11 +74,14 @@ export const router = createBrowserRouter([
           { path: paths.adminMessages, element: <AdminMessagesPage /> },
           { path: paths.adminContact, element: <AdminContactPage /> },
           { path: paths.adminSocialMedia, element: <AdminSocialMediaPage /> },
+          // Kullanici listeleme Admin + Manager'a acik (parent guard yeterli).
+          { path: paths.adminUsers, element: <AdminUsersPage /> },
           // Yalniz-Admin alanlar: ek bir ProtectedRoute(requireRole=['Admin'])
           // ile daraltilir. Manager deep-link ile gelse bile ana sayfaya yonlenir.
           {
             element: <ProtectedRoute requireRole={['Admin']} />,
             children: [
+              { path: paths.adminRoles, element: <AdminRolesPage /> },
               {
                 path: paths.adminSearchLogs,
                 element: <AdminSearchLogsPage />,
