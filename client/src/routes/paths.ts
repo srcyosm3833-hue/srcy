@@ -10,6 +10,8 @@ export const paths = {
   /** Tek blog detayi yolu uretici. */
   blogDetail: (id: string | number = ':id') => `/blogs/${id}`,
   contact: '/contact',
+  /** KVKK aydinlatma metni / gizlilik politikasi (public, anonim). */
+  privacyPolicy: '/gizlilik-politikasi',
 
   // --- Admin alani ---
   admin: '/admin',

@@ -20,7 +20,9 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 import { PasswordInput } from '@/components/forms/PasswordInput'
+import { paths } from '@/routes/paths'
 
 /**
  * Kayit form semasi. Sifre politikasi backend ile uyumlu: min 8 karakter,
@@ -45,6 +47,14 @@ const registerSchema = z.object({
     .url('Geçerli bir URL girin.')
     .or(z.literal(''))
     .optional(),
+  // KVKK aydinlatma metni onayi: yalnizca form-ici alan, backend'e GONDERILMEZ.
+  // boolean modeli (default false gecerli olsun) + refine ile zorunlu true:
+  // isaretlenmeden submit edilince zodResolver formu bloklar.
+  kvkkConsent: z
+    .boolean()
+    .refine((v) => v === true, {
+      message: 'Devam etmek için aydınlatma metnini onaylamalısınız.',
+    }),
 })
 
 type RegisterFormValues = z.infer<typeof registerSchema>
@@ -78,6 +88,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
       email: '',
       password: '',
       imageUrl: '',
+      kvkkConsent: false,
     },
   })
 
@@ -223,6 +234,41 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
               </FormControl>
               <FormDescription>Boş bırakabilirsiniz.</FormDescription>
               <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* KVKK onayi: zorunlu. Link yeni sekmede acilir (modal/overlay icinde de
+            kullanildigindan form verisi kaybolmasin). */}
+        <FormField
+          control={form.control}
+          name="kvkkConsent"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start gap-2 space-y-0">
+              <FormControl>
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                  aria-describedby="kvkk-consent-text"
+                />
+              </FormControl>
+              <div className="space-y-1 leading-none">
+                <FormLabel
+                  id="kvkk-consent-text"
+                  className="text-sm font-normal"
+                >
+                  <a
+                    href={paths.privacyPolicy}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-primary underline-offset-4 hover:underline"
+                  >
+                    Aydınlatma metnini
+                  </a>{' '}
+                  okudum ve onaylıyorum.
+                </FormLabel>
+                <FormMessage />
+              </div>
             </FormItem>
           )}
         />

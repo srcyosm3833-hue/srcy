@@ -22,6 +22,7 @@ const RegisterPage = lazy(() => import('@/pages/RegisterPage'))
 const BlogListPage = lazy(() => import('@/pages/BlogListPage'))
 const BlogDetailPage = lazy(() => import('@/pages/BlogDetailPage'))
 const ContactPage = lazy(() => import('@/pages/ContactPage'))
+const PrivacyPolicyPage = lazy(() => import('@/pages/PrivacyPolicyPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 
 // Lazy admin sayfalari.
@@ -54,6 +55,7 @@ export const router = createBrowserRouter([
       { path: paths.blogs, element: <BlogListPage /> },
       { path: paths.blogDetail(), element: <BlogDetailPage /> },
       { path: paths.contact, element: <ContactPage /> },
+      { path: paths.privacyPolicy, element: <PrivacyPolicyPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
