@@ -354,5 +354,175 @@ namespace Zn.ClientWebApi.IntegrationTests.Infrastructure
             this HttpClient client, int page = 1, int pageSize = 20) =>
             client.GetAsync($"/api/admin/comments?page={page}&pageSize={pageSize}");
 
+        // ---- Admin Blog Audit (Audit / IP hash) ----
+
+        /// <summary>
+        /// Calls GET /api/admin/blogs/{id} to retrieve a blog's audit detail (includes creatorIpHash).
+        /// Requires Admin or Manager token.
+        /// </summary>
+        public static Task<HttpResponseMessage> GetAdminBlogAuditAsync(this HttpClient client, Guid blogId) =>
+            client.GetAsync($"/api/admin/blogs/{blogId}");
+
+        // ---- Blog creation with X-Forwarded-For header ----
+
+        /// <summary>
+        /// Creates a blog via POST /api/blogs with an explicit X-Forwarded-For header so the
+        /// IP resolver picks up the provided IP and hashes it into creatorIpHash.
+        /// </summary>
+        public static Task<HttpResponseMessage> CreateBlogWithIpAsync(
+            this HttpClient client,
+            string title,
+            string description,
+            Guid categoryId,
+            string forwardedForIp)
+        {
+            var request = new System.Net.Http.HttpRequestMessage(
+                System.Net.Http.HttpMethod.Post, "/api/blogs");
+            request.Headers.Add("X-Forwarded-For", forwardedForIp);
+            request.Content = System.Net.Http.Json.JsonContent.Create(new
+            {
+                Title = title,
+                Description = description,
+                CoverImage = "https://example.com/cover.png",
+                BlogImage = "https://example.com/blog.png",
+                CategoryId = categoryId
+            }, options: JsonOpts);
+            return client.SendAsync(request);
+        }
+
+        // ---- Message with X-Forwarded-For header ----
+
+        /// <summary>
+        /// Sends a message via POST /api/messages with an explicit X-Forwarded-For header so the
+        /// IP resolver picks up the provided IP and hashes it into senderIpHash.
+        /// </summary>
+        public static Task<HttpResponseMessage> SendMessageWithIpAsync(
+            this HttpClient client,
+            string name,
+            string email,
+            string subject,
+            string body,
+            string forwardedForIp)
+        {
+            var request = new System.Net.Http.HttpRequestMessage(
+                System.Net.Http.HttpMethod.Post, "/api/messages");
+            request.Headers.Add("X-Forwarded-For", forwardedForIp);
+            request.Content = System.Net.Http.Json.JsonContent.Create(new
+            {
+                Name = name,
+                Email = email,
+                Subject = subject,
+                MessageBody = body
+            }, options: JsonOpts);
+            return client.SendAsync(request);
+        }
+
+        // ---- Search logs (Admin audit) ----
+
+        /// <summary>
+        /// Calls GET /api/admin/search-logs with optional pagination and term filter parameters.
+        /// Requires Admin-role Bearer token; returns 401 for anonymous, 403 for Manager/User.
+        /// </summary>
+        public static Task<HttpResponseMessage> GetAdminSearchLogsAsync(
+            this HttpClient client,
+            int page = 1,
+            int pageSize = 20,
+            string? term = null)
+        {
+            string url = $"/api/admin/search-logs?page={page}&pageSize={pageSize}";
+            if (!string.IsNullOrEmpty(term))
+            {
+                url += $"&term={Uri.EscapeDataString(term)}";
+            }
+            return client.GetAsync(url);
+        }
+
+        // ---- Blog search with X-Forwarded-For header ----
+
+        /// <summary>
+        /// Searches blogs with an explicit X-Forwarded-For header to force IP resolution for audit logging.
+        /// </summary>
+        public static Task<HttpResponseMessage> SearchBlogsWithIpAsync(
+            this HttpClient client,
+            string q,
+            string forwardedForIp,
+            int page = 1,
+            int pageSize = 10)
+        {
+            var request = new System.Net.Http.HttpRequestMessage(
+                System.Net.Http.HttpMethod.Get,
+                $"/api/blogs/search?q={Uri.EscapeDataString(q)}&page={page}&pageSize={pageSize}");
+            request.Headers.Add("X-Forwarded-For", forwardedForIp);
+            return client.SendAsync(request);
+        }
+
+        // ---- Role management (Audit Faz) ----
+
+        /// <summary>
+        /// Calls GET /api/admin/roles to list all roles with userCount and isProtected.
+        /// Requires Admin-role Bearer token.
+        /// </summary>
+        public static Task<HttpResponseMessage> GetAdminRolesAsync(this HttpClient client) =>
+            client.GetAsync("/api/admin/roles");
+
+        /// <summary>
+        /// Calls POST /api/admin/roles to create a new custom role.
+        /// Requires Admin-role Bearer token.
+        /// </summary>
+        public static Task<HttpResponseMessage> CreateAdminRoleAsync(this HttpClient client, string roleName) =>
+            client.PostAsJsonAsync("/api/admin/roles", new { Name = roleName }, JsonOpts);
+
+        /// <summary>
+        /// Calls PUT /api/admin/roles/{id} to rename an existing role.
+        /// Requires Admin-role Bearer token.
+        /// </summary>
+        public static Task<HttpResponseMessage> UpdateAdminRoleAsync(
+            this HttpClient client, string roleId, string newName) =>
+            client.PutAsJsonAsync($"/api/admin/roles/{roleId}", new { Name = newName }, JsonOpts);
+
+        /// <summary>
+        /// Calls DELETE /api/admin/roles/{id} to delete a custom role.
+        /// Requires Admin-role Bearer token.
+        /// </summary>
+        public static Task<HttpResponseMessage> DeleteAdminRoleAsync(
+            this HttpClient client, string roleId) =>
+            client.DeleteAsync($"/api/admin/roles/{roleId}");
+
+        /// <summary>
+        /// Creates a custom role via POST /api/admin/roles and returns the role's Id.
+        /// Throws if creation fails.
+        /// </summary>
+        public static async Task<string> ArrangeCreateAdminRoleAsync(
+            this HttpClient adminClient, string roleName)
+        {
+            HttpResponseMessage response = await adminClient.CreateAdminRoleAsync(roleName);
+            string body = await response.Content.ReadAsStringAsync();
+            if ((int)response.StatusCode != 201)
+            {
+                throw new InvalidOperationException(
+                    $"Role creation failed ({response.StatusCode}): {body}");
+            }
+
+            JsonDocument doc = JsonDocument.Parse(body);
+            return doc.RootElement.GetProperty("id").GetString()!;
+        }
+
+        /// <summary>
+        /// Calls POST /api/admin/users/{id}/roles to assign a role to a user.
+        /// Requires Admin-role Bearer token.
+        /// </summary>
+        public static Task<HttpResponseMessage> AssignUserRoleAsync(
+            this HttpClient client, string userId, string roleName) =>
+            client.PostAsJsonAsync($"/api/admin/users/{userId}/roles",
+                new { RoleName = roleName }, JsonOpts);
+
+        /// <summary>
+        /// Calls DELETE /api/admin/users/{id}/roles/{roleName} to remove a role from a user.
+        /// Requires Admin-role Bearer token.
+        /// </summary>
+        public static Task<HttpResponseMessage> RemoveUserRoleAsync(
+            this HttpClient client, string userId, string roleName) =>
+            client.DeleteAsync($"/api/admin/users/{userId}/roles/{roleName}");
+
     }
 }
