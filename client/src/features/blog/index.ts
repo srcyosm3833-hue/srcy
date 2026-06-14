@@ -4,6 +4,7 @@ export {
   useBlogList,
   useBlogSearch,
   useBlogDetail,
+  useBlogAuditDetail,
   useCreateBlog,
   useUpdateBlog,
   useDeleteBlog,

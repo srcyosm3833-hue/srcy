@@ -45,6 +45,30 @@ export interface BlogDetail {
   isLikedByCurrentUser: boolean
 }
 
+/**
+ * Admin blog audit detayi. Kaynak: Features/Blogs/Common/BlogAuditDetailResponse.cs.
+ * Public BlogDetail'den farki: audit alani `creatorIpHash` icerir, `isLikedByCurrentUser`
+ * icermez. YALNIZCA GET /api/admin/blogs/{id} (Authorize: Admin,Manager) ucundan doner;
+ * public uclarda bu alan ASLA yer almaz.
+ */
+export interface BlogAuditDetail {
+  id: string
+  title: string
+  coverImage: string
+  blogImage: string
+  description: string
+  categoryId: string
+  categoryName: string
+  authorId: string
+  authorName: string
+  createdAt: string
+  /** Hic guncellenmediyse null. */
+  updatedAt: string | null
+  likeCount: number
+  /** Olusturanin tuzlu SHA-256 IP hash'i (audit); cozulemediyse null. */
+  creatorIpHash: string | null
+}
+
 /** POST /api/blogs/{id}/like yaniti (toggle sonucu). */
 export interface BlogLikeToggleResponse {
   /** Islem sonunda blog begenili mi (true = like eklendi, false = kaldirildi). */

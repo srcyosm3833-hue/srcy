@@ -12,6 +12,7 @@ import { PageHeader } from '@/components/common/PageHeader'
 import { EmptyState } from '@/components/common/EmptyState'
 import { ErrorState } from '@/components/common/ErrorState'
 import { PaginationBar } from '@/components/common/PaginationBar'
+import { IpHashCell } from '@/components/admin/IpHashCell'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
@@ -194,6 +195,10 @@ export default function AdminMessagesPage() {
                   <p className="mt-1 text-sm text-muted-foreground">
                     {selected.name} · {selected.email} ·{' '}
                     {formatDateTime(selected.createdAt)}
+                  </p>
+                  <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                    Gönderen IP (hash):
+                    <IpHashCell hash={selected.senderIpHash} />
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">

@@ -17,6 +17,7 @@ export type {
 export type {
   BlogListItem,
   BlogDetail,
+  BlogAuditDetail,
   CreateBlogRequest,
   UpdateBlogRequest,
   BlogListQuery,
@@ -49,3 +50,4 @@ export type {
   UpdateSocialMediaRequest,
 } from './socialMedia'
 export type { UploadImageResponse } from './upload'
+export type { SearchLog, SearchLogQuery } from './searchLog'

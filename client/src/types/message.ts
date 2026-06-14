@@ -18,6 +18,8 @@ export interface Message {
   messageBody: string
   isRead: boolean
   createdAt: string
+  /** Gonderenin tuzlu SHA-256 IP hash'i (anonim audit); cozulemediyse null. */
+  senderIpHash: string | null
 }
 
 /** POST /api/messages govdesi (iletisim formu). */

@@ -1,6 +1,14 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Eye, FileText, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react'
+import {
+  Eye,
+  FileText,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  ShieldQuestion,
+  Trash2,
+} from 'lucide-react'
 import { toast } from 'sonner'
 
 import type { BlogListItem } from '@/types'
@@ -15,6 +23,7 @@ import { ErrorState } from '@/components/common/ErrorState'
 import { PaginationBar } from '@/components/common/PaginationBar'
 import { TableSkeleton } from '@/components/admin/TableSkeleton'
 import { ConfirmDeleteDialog } from '@/components/admin/ConfirmDeleteDialog'
+import { BlogAuditDialog } from '@/components/admin/BlogAuditDialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -54,6 +63,8 @@ export default function AdminBlogListPage() {
 
   // Silinmek uzere secilen blog (ConfirmDeleteDialog kontrollu open state'i).
   const [toDelete, setToDelete] = useState<BlogListItem | null>(null)
+  // Audit detayi acilan blog id'si (BlogAuditDialog kontrollu open state'i).
+  const [auditId, setAuditId] = useState<string | null>(null)
 
   function goToPage(next: number) {
     setSearchParams((prev) => {
@@ -206,6 +217,12 @@ export default function AdminBlogListPage() {
                             <Pencil className="h-4 w-4" />
                             Düzenle
                           </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onSelect={() => setAuditId(blog.id)}
+                          >
+                            <ShieldQuestion className="h-4 w-4" />
+                            Denetim Detayı
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             className="text-destructive focus:text-destructive"
@@ -246,6 +263,14 @@ export default function AdminBlogListPage() {
             : ''
         }
         onConfirm={handleDelete}
+      />
+
+      <BlogAuditDialog
+        open={auditId !== null}
+        onOpenChange={(open) => {
+          if (!open) setAuditId(null)
+        }}
+        blogId={auditId}
       />
     </div>
   )

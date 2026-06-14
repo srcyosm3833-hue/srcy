@@ -22,4 +22,6 @@ export const paths = {
   adminMessages: '/admin/messages',
   adminContact: '/admin/contact',
   adminSocialMedia: '/admin/social-media',
+  // Yalniz-Admin alanlar (Manager goremez):
+  adminSearchLogs: '/admin/search-logs',
 } as const

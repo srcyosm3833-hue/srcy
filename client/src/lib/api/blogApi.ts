@@ -1,5 +1,6 @@
 import { request } from './client'
 import type {
+  BlogAuditDetail,
   BlogDetail,
   BlogLikeToggleResponse,
   BlogListItem,
@@ -62,6 +63,18 @@ export const blogApi = {
   /** Tek blogun tam detayi. Bulunamazsa istek 404 ile reddeder. */
   getById(id: string): Promise<BlogDetail> {
     return request<BlogDetail>({ method: 'get', url: `/api/blogs/${id}` })
+  },
+
+  /**
+   * Admin blog audit detayi (creatorIpHash dahil). Yalnizca Admin/Manager.
+   * Public getById'den farki: audit alanlarini icerir, isLikedByCurrentUser icermez.
+   * Soft delete edilmis bloglar da denetlenebilir. Bulunamazsa 404.
+   */
+  getAuditById(id: string): Promise<BlogAuditDetail> {
+    return request<BlogAuditDetail>({
+      method: 'get',
+      url: `/api/admin/blogs/${id}`,
+    })
   },
 
   /** Yeni blog olusturur. Yazar token'dan alinir (govdede UserId yoktur). 201 + detay. */

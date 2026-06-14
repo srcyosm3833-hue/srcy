@@ -6,6 +6,7 @@ import {
   Mail,
   MessageSquare,
   Phone,
+  Search,
   Share2,
   Tag,
 } from 'lucide-react'
@@ -52,6 +53,13 @@ const navItems: AdminNavItem[] = [
     adminOnly: true,
   },
   { to: paths.adminSocialMedia, label: 'Sosyal Medya', icon: Share2 },
+  // Arama loglari KVKK kapsaminda; yalniz Admin (A-AU5) -> adminOnly.
+  {
+    to: paths.adminSearchLogs,
+    label: 'Arama Logları',
+    icon: Search,
+    adminOnly: true,
+  },
 ]
 
 interface AdminSidebarProps {

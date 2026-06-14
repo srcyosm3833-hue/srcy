@@ -21,6 +21,8 @@ export const blogKeys = {
     [...blogKeys.all, 'search', params] as const,
   /** Tek blog detayi. */
   detail: (id: string) => [...blogKeys.all, 'detail', id] as const,
+  /** Admin blog audit detayi (creatorIpHash dahil; ayri ucdan gelir). */
+  auditDetail: (id: string) => [...blogKeys.all, 'auditDetail', id] as const,
 }
 
 /**
@@ -55,6 +57,18 @@ export function useBlogDetail(id: string | undefined) {
   return useQuery({
     queryKey: blogKeys.detail(id ?? ''),
     queryFn: () => blogApi.getById(id as string),
+    enabled: Boolean(id),
+  })
+}
+
+/**
+ * Admin blog audit detayi (creatorIpHash + yazar/tarih). Yalniz Admin/Manager
+ * erisir; GET /api/admin/blogs/{id}'den gelir. id yoksa sorgu calismaz (enabled).
+ */
+export function useBlogAuditDetail(id: string | undefined) {
+  return useQuery({
+    queryKey: blogKeys.auditDetail(id ?? ''),
+    queryFn: () => blogApi.getAuditById(id as string),
     enabled: Boolean(id),
   })
 }

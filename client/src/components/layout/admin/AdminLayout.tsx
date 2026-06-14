@@ -15,6 +15,7 @@ const titleByPath: { prefix: string; title: string }[] = [
   { prefix: paths.adminCategories, title: 'Kategori Yönetimi' },
   { prefix: paths.adminMessages, title: 'Mesaj Kutusu' },
   { prefix: paths.adminSocialMedia, title: 'Sosyal Medya' },
+  { prefix: paths.adminSearchLogs, title: 'Arama Logları' },
   // En genel olan (sadece /admin) en sona: Dashboard.
   { prefix: paths.admin, title: 'Dashboard' },
 ]
